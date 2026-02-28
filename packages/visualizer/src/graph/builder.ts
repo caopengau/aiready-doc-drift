@@ -385,6 +385,7 @@ export class GraphBuilder {
         majorIssues,
         minorIssues,
         infoIssues,
+        tokenBudget: report.scoring?.tokenBudget,
       },
     };
 
