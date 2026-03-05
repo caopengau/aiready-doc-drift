@@ -1,5 +1,6 @@
 ifndef AIREADY_SHARED_MK
 AIREADY_SHARED_MK := 1
+unexport AIREADY_SHARED_MK
 
 ###############################################################################
 # Makefile.shared: Common macros, variables, and environment config for all spokes

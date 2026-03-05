@@ -1,7 +1,9 @@
 ###############################################################################
 # Makefile.test: Testing-related targets
 ###############################################################################
-include makefiles/Makefile.shared.mk
+# Resolve this makefile's directory to allow absolute invocation
+MAKEFILE_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+include $(MAKEFILE_DIR)/Makefile.shared.mk
 
 .PHONY: test test-core test-pattern-detect test-watch test-coverage test-verify-cli test-contract test-integration test-landing-e2e test-platform-e2e test-platform test-landing test-platform-e2e-local test-landing-e2e-local
 

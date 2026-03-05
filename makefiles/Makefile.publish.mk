@@ -92,12 +92,15 @@ version-major: ## Bump spoke major version (0.1.0 -> 1.0.0). Usage: make version
 npm-publish: npm-check ## Publish spoke to npm. Usage: make npm-publish SPOKE=pattern-detect
 	$(call require_spoke)
 	@$(call log_step,Publishing @aiready/$(SPOKE) to npm...)
-	@# CRITICAL: Use pnpm publish (not npm) to resolve workspace:* dependencies
-	@cd packages/$(SPOKE) && pnpm publish --access public --no-git-checks || { \
-		$(call log_error,Publish failed); \
-		exit 1; \
-	}
-	@$(call log_success,Published @aiready/$(SPOKE) to npm)
+	@if [ "$(SKIP_NPM)" = "1" ]; then \
+		$(call log_info,SKIP_NPM=1 detected. Skipping npm publish for @aiready/$(SPOKE).); \
+	else \
+		cd packages/$(SPOKE) && pnpm publish --access public --no-git-checks || { \
+			$(call log_error,Publish failed); \
+			exit 1; \
+		}; \
+		$(call log_success,Published @aiready/$(SPOKE) to npm); \
+	fi
 
 # Generic GitHub publish (requires SPOKE parameter)
 publish: ## Publish spoke to GitHub. Usage: make publish SPOKE=pattern-detect [OWNER=username]

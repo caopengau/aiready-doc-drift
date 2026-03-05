@@ -285,51 +285,52 @@ release-all: ## Release all spokes: TYPE=patch|minor|major (excludes landing)
 		$(call log_error,Invalid TYPE '$(TYPE)'. Expected patch|minor|major); \
 		exit 1; \
 	fi; \
-	$(call log_step,Phase 1: Version bumping all spokes...); \
+	$(call log_step,Phase 1: Building workspace ONCE...); \
+	$(MAKE) -C $(ROOT_DIR) build || { \
+		$(call log_error,Build failed. Aborting release-all.); \
+		exit 1; \
+	}; \
+	$(call log_success,Build complete); \
+	$(call log_step,Phase 2: Testing current state (Unit + Contract)...); \
+	$(MAKE) -C $(ROOT_DIR) test || { \
+		$(call log_error,Tests failed. Aborting release-all.); \
+		exit 1; \
+	}; \
+	$(call log_step,Phase 2.1: Running Tier 2 Integration Tests...); \
+	$(MAKE) -C $(ROOT_DIR) test-integration || { \
+		$(call log_error,Integration tests failed. Aborting release-all.); \
+		exit 1; \
+	}; \
+	$(call log_step,Phase 2.2: Running Tier 3 Local E2E Tests...); \
+	$(MAKE) -C $(ROOT_DIR) test-platform-e2e-local || { \
+		$(call log_error,Platform E2E tests failed locally. Aborting release-all.); \
+		exit 1; \
+	}; \
+	@$(call log_success,All 3 Tiers of contract testing passed); \
+	$(call log_step,Phase 2.5: Performing final CLI smoke test...); \
+	$(MAKE) -C $(ROOT_DIR) test-verify-cli || { \
+		$(call log_error,CLI smoke test failed. Aborting release-all.); \
+		exit 1; \
+	}; \
+	$(call log_success,CLI smoke test passed); \
+	$(call log_step,Phase 3: Version bumping all spokes...); \
 	for spoke in $(CORE_SPOKE) $(MIDDLE_SPOKES) vscode-extension $(CLI_SPOKE); do \
 		$(call log_info,Bumping @aiready/$$spoke...); \
 		$(MAKE) -C $(ROOT_DIR) $$bump_target SPOKE=$$spoke || exit 1; \
 		$(call log_success,Version bumped for @aiready/$$spoke); \
 	done; \
-	$(call log_step,Phase 2: Committing all version bumps in a single commit...); \
-	# Add all package.json bumps and commit once to avoid repeated commits per-spoke
+	$(call log_step,Phase 4: Committing all version bumps...); \
 	cd $(ROOT_DIR) && git add packages/*/package.json || true; \
+	if [ -f "$(ROOT_DIR)/landing/package.json" ]; then git add landing/package.json; fi; \
+	if [ -f "$(ROOT_DIR)/platform/package.json" ]; then git add platform/package.json; fi; \
 	cd $(ROOT_DIR) && git commit -m "chore(release): version bumps across spokes" || $(call log_info,No changes to commit); \
-	$(call log_step,Tagging each spoke...); \
+	$(call log_step,Phase 4.5: Tagging each spoke...); \
 	for spoke in $(CORE_SPOKE) $(MIDDLE_SPOKES) vscode-extension $(CLI_SPOKE); do \
 		version=$$(node -p "require('$(ROOT_DIR)/packages/$$spoke/package.json').version"); \
 		tag_name="$$spoke-v$$version"; \
 		$(call log_step,Tagging $$tag_name...); \
 		cd $(ROOT_DIR) && git tag -f -a "$$tag_name" -m "Release @aiready/$$spoke v$$version" || true; \
 	done; \
-	$(call log_step,Phase 3: Building workspace ONCE...); \
-	$(MAKE) -C $(ROOT_DIR) build || { \
-		$(call log_error,Build failed. Aborting release-all.); \
-		exit 1; \
-	}; \
-	$(call log_success,Build complete); \
-	$(call log_step,Phase 4: Testing workspace (Unit + Contract)...); \
-	$(MAKE) -C $(ROOT_DIR) test || { \
-		$(call log_error,Tests failed. Aborting release-all.); \
-		exit 1; \
-	}; \
-	$(call log_step,Phase 4.1: Running Tier 2 Integration Tests...); \
-	$(MAKE) -C $(ROOT_DIR) test-integration || { \
-		$(call log_error,Integration tests failed. Aborting release-all.); \
-		exit 1; \
-	}; \
-	$(call log_step,Phase 4.2: Running Tier 3 Local E2E Tests...); \
-	$(MAKE) -C $(ROOT_DIR) test-platform-e2e-local || { \
-		$(call log_error,Platform E2E tests failed locally. Aborting release-all.); \
-		exit 1; \
-	}; \
-	@$(call log_success,All 3 Tiers of contract testing passed); \
-	$(call log_step,Phase 4.5: Performing final CLI smoke test...); \
-	$(MAKE) -C $(ROOT_DIR) test-verify-cli || { \
-		$(call log_error,CLI smoke test failed. Aborting release-all.); \
-		exit 1; \
-	}; \
-	$(call log_success,CLI smoke test passed); \
 	$(call log_step,Phase 5: Publishing core spoke first...); \
 	$(MAKE) -C $(ROOT_DIR) npm-publish SPOKE=$(CORE_SPOKE) || exit 1; \
 	$(MAKE) -C $(ROOT_DIR) publish SPOKE=$(CORE_SPOKE) OWNER=$(OWNER) || exit 1; \

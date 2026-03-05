@@ -1,7 +1,9 @@
 # Deployment Automation
 # Deploy landing page and platform to AWS
 
-include makefiles/Makefile.shared.mk
+# Resolve this makefile's directory to allow absolute invocation
+MAKEFILE_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+include $(MAKEFILE_DIR)/Makefile.shared.mk
 
 .PHONY: deploy-landing deploy-landing-prod deploy-landing-remove landing-logs landing-verify landing-cleanup
 .PHONY: deploy-platform deploy-platform-prod deploy-platform-remove platform-logs platform-verify
@@ -36,7 +38,7 @@ deploy-landing-prod: verify-aws-account ## Deploy landing page to AWS (productio
 	@$(call log_success,Landing page deployed to production)
 	@echo "$(CYAN)💡 Blog files synced during build, CloudFront invalidated automatically$(NC)"
 	@echo ""
-	@$(MAKE) landing-verify
+	@$(MAKE) -f $(MAKEFILE_DIR)/Makefile.deploy.mk landing-verify
 
 landing-verify: ## Verify site is accessible
 	@$(call log_step,Verifying site is accessible)
