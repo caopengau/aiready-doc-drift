@@ -4,12 +4,23 @@ import { motion } from 'framer-motion';
 import { scoreColor } from '@aiready/components';
 import type { Analysis } from '@/lib/db';
 
-export function TrendChart({ history }: { history: Analysis[] }) {
+interface TrendChartProps {
+  history: Analysis[];
+  height?: number;
+  width?: number;
+  padding?: number;
+  showLabels?: boolean;
+}
+
+export function TrendChart({
+  history,
+  height = 300,
+  width = 800,
+  padding = 50,
+  showLabels = true,
+}: TrendChartProps) {
   const scores = history.map((h) => h.aiScore || 0);
   const maxScore = 100;
-  const height = 300;
-  const width = 800;
-  const padding = 50;
 
   const points = scores.map((score, i) => {
     const x = padding + (i * (width - 2 * padding)) / (scores.length - 1 || 1);
@@ -27,7 +38,7 @@ export function TrendChart({ history }: { history: Analysis[] }) {
       : '';
 
   return (
-    <div className="relative h-[350px] w-full">
+    <div className="relative w-full overflow-hidden" style={{ height }}>
       <svg
         viewBox={`0 0 ${width} ${height}`}
         className="w-full h-full"
@@ -118,10 +129,12 @@ export function TrendChart({ history }: { history: Analysis[] }) {
           </g>
         ))}
       </svg>
-      <div className="flex justify-between mt-4 px-[50px] text-[10px] font-black text-slate-500 uppercase tracking-widest">
-        <span>History Start</span>
-        <span>Current Status</span>
-      </div>
+      {showLabels && (
+        <div className="flex justify-between mt-4 px-[50px] text-[10px] font-black text-slate-500 uppercase tracking-widest">
+          <span>History Start</span>
+          <span>Current Status</span>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { scoreColor } from '@aiready/components';
 import type { Analysis } from '@/lib/db';
+import { TrendChart } from '@/components/trends/TrendChart';
 
 interface TrendsViewProps {
   repoId: string;
@@ -46,25 +46,6 @@ export function TrendsView({ repoId, repoName, onClose }: TrendsViewProps) {
   }
 
   const scores = history.map((h) => h.aiScore || 0);
-  const maxScore = 100;
-  const height = 200;
-  const width = 600;
-  const padding = 40;
-
-  const points = scores.map((score, i) => {
-    const x = padding + (i * (width - 2 * padding)) / (scores.length - 1 || 1);
-    const y = height - padding - (score * (height - 2 * padding)) / maxScore;
-    return { x, y, score, timestamp: history[i].timestamp };
-  });
-
-  const pathD =
-    points.length > 0
-      ? `M ${points[0].x} ${points[0].y} ` +
-        points
-          .slice(1)
-          .map((p) => `L ${p.x} ${p.y}`)
-          .join(' ')
-      : '';
 
   return (
     <motion.div
@@ -93,117 +74,7 @@ export function TrendsView({ repoId, repoName, onClose }: TrendsViewProps) {
           </p>
         </div>
       ) : (
-        <div className="relative h-[250px] w-full group">
-          <svg
-            viewBox={`0 0 ${width} ${height}`}
-            className="w-full h-full"
-            preserveAspectRatio="none"
-          >
-            {/* Grid Lines */}
-            {[0, 25, 50, 75, 100].map((level) => (
-              <g key={level}>
-                <line
-                  x1={padding}
-                  y1={height - padding - (level * (height - 2 * padding)) / 100}
-                  x2={width - padding}
-                  y2={height - padding - (level * (height - 2 * padding)) / 100}
-                  stroke="rgba(255,255,255,0.05)"
-                  strokeWidth="1"
-                />
-                <text
-                  x={padding - 10}
-                  y={height - padding - (level * (height - 2 * padding)) / 100}
-                  textAnchor="end"
-                  alignmentBaseline="middle"
-                  className="text-[10px] fill-slate-500 font-mono"
-                >
-                  {level}
-                </text>
-              </g>
-            ))}
-
-            {/* Gradient Fill */}
-            <defs>
-              <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="rgba(6, 182, 212, 0.2)" />
-                <stop offset="100%" stopColor="rgba(6, 182, 212, 0)" />
-              </linearGradient>
-            </defs>
-            <path
-              d={`${pathD} L ${points[points.length - 1].x} ${height - padding} L ${points[0].x} ${height - padding} Z`}
-              fill="url(#chartGradient)"
-            />
-
-            {/* Main Path */}
-            <motion.path
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 1.5, ease: 'easeInOut' }}
-              d={pathD}
-              fill="none"
-              stroke="rgba(6, 182, 212, 0.8)"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-
-            {/* Points */}
-            {points.map((p, i) => (
-              <motion.g
-                key={i}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 + i * 0.1 }}
-              >
-                <circle
-                  cx={p.x}
-                  cy={p.y}
-                  r="4"
-                  className={`fill-slate-900 stroke-2 ${scoreColor(p.score).replace('text', 'stroke')}`}
-                />
-
-                {/* Tooltip Hover Area */}
-                <rect
-                  x={p.x - 10}
-                  y={padding}
-                  width="20"
-                  height={height - 2 * padding}
-                  fill="transparent"
-                  className="cursor-pointer peer"
-                />
-
-                {/* Tooltip Label */}
-                <g className="opacity-0 peer-hover:opacity-100 transition-opacity pointer-events-none">
-                  <rect
-                    x={p.x - 20}
-                    y={p.y - 30}
-                    width="40"
-                    height="20"
-                    rx="4"
-                    className="fill-slate-800 border border-white/10"
-                  />
-                  <text
-                    x={p.x}
-                    y={p.y - 16}
-                    textAnchor="middle"
-                    className="text-[10px] fill-white font-bold"
-                  >
-                    {p.score}
-                  </text>
-                </g>
-              </motion.g>
-            ))}
-          </svg>
-
-          <div className="flex justify-between mt-4 px-[40px]">
-            <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">
-              Earlier
-            </span>
-            <span className="text-[10px] text-cyan-500 uppercase tracking-wider font-bold">
-              Latest
-            </span>
-          </div>
-        </div>
+        <TrendChart history={history} height={250} width={600} padding={40} />
       )}
 
       <div className="mt-8 flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5">
