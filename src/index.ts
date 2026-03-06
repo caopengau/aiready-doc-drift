@@ -12,6 +12,17 @@ import type {
   ScoringResult,
 } from '@aiready/core';
 
+// Pre-import all tool providers to ensure they are registered by default
+import '@aiready/pattern-detect';
+import '@aiready/context-analyzer';
+import '@aiready/consistency';
+import '@aiready/ai-signal-clarity';
+import '@aiready/agent-grounding';
+import '@aiready/testability';
+import '@aiready/doc-drift';
+import '@aiready/deps';
+import '@aiready/change-amplification';
+
 export type { ToolScoringOutput, ScoringResult };
 
 export interface UnifiedAnalysisOptions extends ScanOptions {
@@ -129,7 +140,19 @@ export async function analyzeUnified(
     }
 
     try {
-      const output = await provider.analyze(options);
+      const output = await provider.analyze({
+        ...options,
+        onProgress: (processed: number, total: number, message: string) => {
+          if (options.progressCallback) {
+            options.progressCallback({
+              tool: provider!.id,
+              processed,
+              total,
+              message,
+            });
+          }
+        },
+      });
 
       if (options.progressCallback) {
         options.progressCallback({ tool: provider.id, data: output });
