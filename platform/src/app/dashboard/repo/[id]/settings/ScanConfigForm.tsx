@@ -158,30 +158,43 @@ export function ScanConfigForm({
 
     // 2. Pattern Detection (The most expensive O(N^2) tool)
     if (activeTools.includes(ToolName.PatternDetect)) {
-      const blocks = fileCount * 5;
+      const toolCfg = settings.tools?.[ToolName.PatternDetect];
+      const minLines = toolCfg?.minLines || 5;
+      const minSimilarity = toolCfg?.minSimilarity || 0.8;
+      const approx = toolCfg?.approx !== false;
+      const minTokens = toolCfg?.minSharedTokens || 10;
+      const maxCandidates = toolCfg?.maxCandidatesPerBlock || 100;
+
+      // minLines impact: number of blocks scales roughly inversely with sqrt(minLines)
+      // Base assumption: 5 blocks per file at 5 lines min.
+      const blocksPerFile = 5 * Math.sqrt(5 / minLines);
+      const blocks = fileCount * blocksPerFile;
       const totalComparisons = (blocks * blocks) / 2;
-      const approx = settings.tools?.[ToolName.PatternDetect]?.approx !== false;
-      const maxCandidates =
-        settings.tools?.[ToolName.PatternDetect]?.maxCandidatesPerBlock || 100;
 
       let effectiveComparisons = totalComparisons;
 
       if (approx) {
-        // Approximate mode uses hashing/indexing, dramatically reducing the search space
-        // We estimate it prunes ~95% of comparisons
-        effectiveComparisons = totalComparisons * 0.05;
+        // Approximate mode uses hashing/indexing.
+        // More tokens = more specific index = more pruning
+        const tokenPruningFactor = Math.min(0.99, 0.8 + minTokens * 0.02);
+        effectiveComparisons = totalComparisons * (1 - tokenPruningFactor);
 
-        // Even in approx mode, maxCandidates limits the final verification step
+        // maxCandidates limits the final verification step
         effectiveComparisons = Math.min(
           effectiveComparisons,
           blocks * maxCandidates
         );
       } else {
-        // Exhaustive mode: impact of maxCandidates is still linear on the search space
-        // but it's starting from the full N^2 base
+        // Exhaustive mode
+        // Higher minSimilarity allows early exit in some comparison algos (e.g. Jaccard token count check)
+        const similarityPruningFactor = Math.max(0.1, minSimilarity);
+        effectiveComparisons =
+          totalComparisons * (1.1 - similarityPruningFactor);
+
+        // maxCandidates still limits the total verification work
         effectiveComparisons = Math.min(
-          totalComparisons,
-          blocks * maxCandidates * 5 // Factor of 5 because exhaustive check is deeper
+          effectiveComparisons,
+          blocks * maxCandidates * 10 // Factor of 10 for deep pairwise check
         );
       }
 
@@ -193,8 +206,8 @@ export function ScanConfigForm({
     if (activeTools.includes(ToolName.ContextAnalyzer)) {
       const depth = settings.tools?.[ToolName.ContextAnalyzer]?.maxDepth || 5;
       // Exponential increase with depth
-      const depthFactor = Math.pow(1.3, depth);
-      seconds += fileCount * 0.08 * depthFactor;
+      const depthFactor = Math.pow(1.4, depth - 5);
+      seconds += fileCount * 0.1 * depthFactor;
     }
 
     // 4. Other tools (Generally O(N))
