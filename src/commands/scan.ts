@@ -192,6 +192,9 @@ export async function scanAction(directory: string, options: ScanOptions) {
     console.log(
       `  Total issues (all tools): ${chalk.bold(String(results.summary.totalIssues || 0))}`
     );
+    console.log(
+      `  Execution time: ${chalk.bold(((Date.now() - startTime) / 1000).toFixed(2) + 's')}`
+    );
 
     let scoringResult: ScoringResult | undefined;
     if (options.score || finalOptions.scoring?.showBreakdown) {
