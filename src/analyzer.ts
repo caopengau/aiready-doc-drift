@@ -77,14 +77,13 @@ export async function analyzeDocDrift(
             if (exp.type === 'function' && exp.parameters) {
               const params = exp.parameters;
               // Check if params mentioned in doc (standard @param or simple mention)
-              const missingParams = params.filter(
-                (p) =>
-                  !docContent.includes(p) &&
-                  !docContent.toLowerCase().includes(p.toLowerCase())
-              );
+              // Use regex with word boundaries to avoid partial matches (e.g. 'b' in 'numbers')
+              const missingParams = params.filter((p) => {
+                const regex = new RegExp(`\\b${p}\\b`, 'i');
+                return !regex.test(docContent);
+              });
 
-              if (missingParams.length > 0 && params.length > 2) {
-                // Allow 1-2 params to be undocumented
+              if (missingParams.length > 0) {
                 outdatedComments++;
                 issues.push({
                   type: IssueType.DocDrift,
