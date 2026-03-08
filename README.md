@@ -11,6 +11,12 @@ High architectural coupling is one of the leading causes of AI agent failure. Wh
 
 The **Change Amplification** analyzer computes graph metrics (fan-in, fan-out, and centrality) to identify these high-risk areas before they cause an "edit explosion."
 
+### Language Support
+
+- **Full Support:** TypeScript, JavaScript, Python, Java, Go, C#
+- **Capabilities:** Fan-in/Fan-out analysis, blast radius prediction, hotspot detection.
+  toxicology
+
 ## 🏛️ Architecture
 
 ```
