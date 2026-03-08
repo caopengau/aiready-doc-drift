@@ -1,0 +1,40 @@
+[
+  {
+    "title": "AI-Readiness Quick Scan",
+    "description": "A specialized skill for AI agents to perform a rapid assessment of a repository's AI-readiness. Identifies context fragmentation and immediate blockers.",
+    "type": "skill",
+    "price": 9.99,
+    "slug": "aiready-quick-scan",
+    "features": [
+      "Dependency fragmentation report",
+      "Context window cost analysis",
+      "Actionable fixes for AI confusion"
+    ]
+  },
+  {
+    "title": "AI-Ready Technical Architect",
+    "description": "A comprehensive persona designed to lead codebase modernization. Specializes in refactoring for AI leverage and maintaining architectural consistency.",
+    "type": "persona",
+    "price": 49.0,
+    "slug": "aiready-archect",
+    "features": [
+      "Includes all AIReady analysis skills",
+      "Auto-generated Memory.md and Soul.md for any repo",
+      "Advanced semantic duplicate detection",
+      "Naming convention enforcement"
+    ]
+  },
+  {
+    "title": "Enterprise AI Governance Suite",
+    "description": "The ultimate persona for large-scale AI transformation. Manages thousands of repositories, ensures global pattern consistency, and optimizes for multi-agent collaboration.",
+    "type": "persona",
+    "price": 199.0,
+    "slug": "aiready-enterprise",
+    "features": [
+      "Global pattern-matching across microservices",
+      "Cross-repo dependency graphing",
+      "Full compliance with AIReady v1.0 specifications",
+      "Priority updates for all new analysis tools"
+    ]
+  }
+]
