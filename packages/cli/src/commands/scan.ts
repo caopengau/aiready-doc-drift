@@ -98,6 +98,24 @@ export async function scanAction(directory: string, options: ScanOptions) {
         case 'cost':
           profileTools = [ToolName.PatternDetect, ToolName.ContextAnalyzer];
           break;
+        case 'logic':
+          profileTools = [
+            ToolName.TestabilityIndex,
+            ToolName.NamingConsistency,
+            ToolName.ContextAnalyzer,
+            ToolName.PatternDetect,
+            ToolName.ChangeAmplification,
+          ];
+          break;
+        case 'ui':
+          profileTools = [
+            ToolName.NamingConsistency,
+            ToolName.ContextAnalyzer,
+            ToolName.PatternDetect,
+            ToolName.DocDrift,
+            ToolName.AiSignalClarity,
+          ];
+          break;
         case 'security':
           profileTools = [
             ToolName.NamingConsistency,
@@ -182,6 +200,10 @@ export async function scanAction(directory: string, options: ScanOptions) {
       }
     };
 
+    // Determine scoring profile for project-type-aware weighting
+    const scoringProfile =
+      options.profile || baseOptions.scoring?.profile || 'default';
+
     const results = await analyzeUnified({
       ...finalOptions,
       progressCallback,
@@ -199,10 +221,18 @@ export async function scanAction(directory: string, options: ScanOptions) {
 
     let scoringResult: ScoringResult | undefined;
     if (options.score || finalOptions.scoring?.showBreakdown) {
-      scoringResult = await scoreUnified(results, finalOptions);
+      // Pass the profile to scoreUnified
+      scoringResult = await scoreUnified(results, {
+        ...finalOptions,
+        scoring: {
+          ...finalOptions.scoring,
+          profile: scoringProfile,
+        },
+      });
 
       console.log(chalk.bold('\n📊 AI Readiness Overall Score'));
       console.log(`  ${formatScore(scoringResult)}`);
+      console.log(chalk.dim(`  (Scoring Profile: ${scoringProfile})`));
 
       // Trend comparison logic
       if (options.compareTo) {
@@ -313,8 +343,37 @@ export async function scanAction(directory: string, options: ScanOptions) {
         console.log(chalk.bold('\nTool breakdown:'));
         scoringResult.breakdown.forEach((tool) => {
           const rating = getRating(tool.score);
-          console.log(`  - ${tool.toolName}: ${tool.score}/100 (${rating})`);
+          const emoji = getRatingDisplay(rating).emoji;
+          console.log(
+            `  - ${tool.toolName}: ${tool.score}/100 (${rating}) ${emoji}`
+          );
         });
+
+        // Top Actionable Recommendations
+        const allRecs = scoringResult.breakdown
+          .flatMap((t) =>
+            (t.recommendations || []).map((r) => ({ ...r, tool: t.toolName }))
+          )
+          .sort((a, b) => b.estimatedImpact - a.estimatedImpact)
+          .slice(0, 3);
+
+        if (allRecs.length > 0) {
+          console.log(chalk.bold('\n🎯 Top Actionable Recommendations:'));
+          allRecs.forEach((rec, i) => {
+            const priorityIcon =
+              rec.priority === 'high'
+                ? '🔴'
+                : rec.priority === 'medium'
+                  ? '🟡'
+                  : '🔵';
+            console.log(
+              `  ${i + 1}. ${priorityIcon} ${chalk.bold(rec.action)}`
+            );
+            console.log(
+              `     Impact: ${chalk.green(`+${rec.estimatedImpact} points`)} to ${rec.tool}`
+            );
+          });
+        }
       }
     }
 

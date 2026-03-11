@@ -95,7 +95,7 @@ program
   )
   .option(
     '--profile <type>',
-    'Scan profile to use (agentic, cost, security, onboarding)'
+    'Scan profile to use (agentic, cost, logic, ui, security, onboarding)'
   )
   .option(
     '--compare-to <path>',
@@ -105,6 +105,7 @@ program
   .option('--exclude <patterns>', 'File patterns to exclude (comma-separated)')
   .option('-o, --output <format>', 'Output format: console, json', 'console')
   .option('--output-file <path>', 'Output file path (for json)')
+  .option('--score', 'Calculate and display AI Readiness Score (0-100)')
   .option(
     '--no-score',
     'Disable calculating AI Readiness Score (enabled by default)'
