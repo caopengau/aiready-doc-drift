@@ -13,6 +13,8 @@ const meta = {
   ],
   readingTime: '5 min read',
   slug: 'observability-intelligence',
+  cover: '/agentic-shift-series-8.png',
+  ogImage: '/agentic-shift-series-8.png',
 };
 
 export default meta;

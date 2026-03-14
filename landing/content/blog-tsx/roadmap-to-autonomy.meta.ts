@@ -13,6 +13,8 @@ const meta = {
   ],
   readingTime: '6 min read',
   slug: 'roadmap-to-autonomy',
+  cover: '/agentic-shift-series-11.png',
+  ogImage: '/agentic-shift-series-11.png',
 };
 
 export default meta;
