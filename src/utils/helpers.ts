@@ -6,6 +6,9 @@ import { resolve as resolvePath } from 'path';
 import { existsSync, readdirSync, statSync, readFileSync } from 'fs';
 import chalk from 'chalk';
 
+// Re-export findLatestReport from core for deduplication with visualizer
+export { findLatestReport } from '@aiready/core';
+
 /**
  * Generate timestamp for report filenames (YYYYMMDD-HHMMSS)
  * Provides better granularity than date-only filenames
@@ -14,42 +17,6 @@ export function getReportTimestamp(): string {
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-}
-
-/**
- * Find the latest aiready report in the .aiready directory
- * Searches for both new format (aiready-report-*) and legacy format (aiready-scan-*)
- */
-export function findLatestScanReport(dirPath: string): string | null {
-  const aireadyDir = resolvePath(dirPath, '.aiready');
-  if (!existsSync(aireadyDir)) {
-    return null;
-  }
-
-  // Search for new format first, then legacy format
-  let files = readdirSync(aireadyDir).filter(
-    (f) => f.startsWith('aiready-report-') && f.endsWith('.json')
-  );
-  if (files.length === 0) {
-    files = readdirSync(aireadyDir).filter(
-      (f) => f.startsWith('aiready-scan-') && f.endsWith('.json')
-    );
-  }
-
-  if (files.length === 0) {
-    return null;
-  }
-
-  // Sort by modification time, most recent first
-  const sortedFiles = files
-    .map((f) => ({
-      name: f,
-      path: resolvePath(aireadyDir, f),
-      mtime: statSync(resolvePath(aireadyDir, f)).mtime,
-    }))
-    .sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
-
-  return sortedFiles[0].path;
 }
 
 /**

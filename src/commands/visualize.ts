@@ -7,8 +7,7 @@ import { writeFileSync, readFileSync, existsSync, copyFileSync } from 'fs';
 import { resolve as resolvePath } from 'path';
 import { spawn } from 'child_process';
 import { handleCLIError } from '@aiready/core';
-import { generateHTML } from '@aiready/core';
-import { findLatestScanReport } from '../utils/helpers';
+import { generateHTML, findLatestReport } from '@aiready/core';
 
 interface VisualizeOptions {
   report?: string;
@@ -30,7 +29,7 @@ export async function visualizeAction(
 
     // If report not provided or not found, try to find latest scan report
     if (!reportPath || !existsSync(reportPath)) {
-      const latestScan = findLatestScanReport(dirPath);
+      const latestScan = findLatestReport(dirPath);
       if (latestScan) {
         reportPath = latestScan;
         console.log(
