@@ -30,7 +30,7 @@ export const b = a + 1;
     const graph = buildDependencyGraph(files);
 
     expect(graph.nodes.size).toBe(2);
-    expect(graph.edges.get('b.ts')?.has('./a')).toBe(true);
+    expect(graph.edges.get('b.ts')?.has('a.ts')).toBe(true);
   });
 });
 
@@ -72,6 +72,7 @@ describe('calculateImportDepth', () => {
     // Should not infinite loop
     const depth = calculateImportDepth('a.ts', graph);
     expect(depth).toBeGreaterThanOrEqual(0);
+    expect(graph.edges.get('a.ts')?.has('b.ts')).toBe(true);
   });
 });
 

@@ -6,10 +6,48 @@ import {
   inferDomainFromSemantics,
 } from './semantic-analysis';
 import { extractExportsWithAST } from './ast-utils';
+import { join, dirname, normalize } from 'path';
 
 interface FileContent {
   file: string;
   content: string;
+}
+
+/**
+ * Resolve an import source to its absolute path considering the importing file's location
+ */
+function resolveImport(
+  source: string,
+  importingFile: string,
+  allFiles: Set<string>
+): string | null {
+  // If it's not a relative import, we treat it as an external dependency for now
+  // (unless it's an absolute path that exists in our set)
+  if (!source.startsWith('.') && !source.startsWith('/')) {
+    if (allFiles.has(source)) return source;
+    return null;
+  }
+
+  const dir = dirname(importingFile);
+  const absolutePath = normalize(join(dir, source));
+
+  // Try exact match
+  if (allFiles.has(absolutePath)) return absolutePath;
+
+  // Try common extensions
+  const extensions = ['.ts', '.tsx', '.js', '.jsx'];
+  for (const ext of extensions) {
+    const withExt = absolutePath + ext;
+    if (allFiles.has(withExt)) return withExt;
+  }
+
+  // Try directory index
+  for (const ext of extensions) {
+    const indexFile = normalize(join(absolutePath, `index${ext}`));
+    if (allFiles.has(indexFile)) return indexFile;
+  }
+
+  return null;
 }
 
 /**
@@ -88,12 +126,20 @@ export function buildDependencyGraph(
   const autoDetectedKeywords =
     options?.domainKeywords ?? extractDomainKeywordsFromPaths(files);
 
+  const allFilePaths = new Set(files.map((f) => f.file));
+
   for (const { file, content } of files) {
     // 1. Get high-fidelity AST-based imports & exports
     const { imports: astImports } = parseFileExports(content, file);
+
+    // 2. Resolve imports to absolute paths in the graph
+    const resolvedImports = astImports
+      .map((i) => resolveImport(i.source, file, allFilePaths))
+      .filter((path): path is string => path !== null);
+
     const importSources = astImports.map((i) => i.source);
 
-    // 2. Wrap with platform-specific metadata (v0.11+)
+    // 3. Wrap with platform-specific metadata (v0.11+)
     const exports = extractExportsWithAST(
       content,
       file,
@@ -111,7 +157,7 @@ export function buildDependencyGraph(
       tokenCost,
       linesOfCode,
     });
-    edges.set(file, new Set(importSources));
+    edges.set(file, new Set(resolvedImports));
   }
 
   const graph: DependencyGraph = { nodes, edges };
