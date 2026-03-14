@@ -46,6 +46,8 @@ export const posts = [
     author: beyondTheSidekickMeta.author,
     tags: beyondTheSidekickMeta.tags || [],
     readingTime: beyondTheSidekickMeta.readingTime,
+    cover: beyondTheSidekickMeta.cover,
+    ogImage: beyondTheSidekickMeta.ogImage || beyondTheSidekickMeta.cover,
     Content: BeyondTheSidekick,
   },
   {
@@ -56,6 +58,8 @@ export const posts = [
     author: theEconomicMoatMeta.author,
     tags: theEconomicMoatMeta.tags || [],
     readingTime: theEconomicMoatMeta.readingTime,
+    cover: theEconomicMoatMeta.cover,
+    ogImage: theEconomicMoatMeta.ogImage || theEconomicMoatMeta.cover,
     Content: TheEconomicMoat,
   },
   {
@@ -66,6 +70,8 @@ export const posts = [
     author: theNeuralSpineMeta.author,
     tags: theNeuralSpineMeta.tags || [],
     readingTime: theNeuralSpineMeta.readingTime,
+    cover: theNeuralSpineMeta.cover,
+    ogImage: theNeuralSpineMeta.ogImage || theNeuralSpineMeta.cover,
     Content: TheNeuralSpine,
   },
   {
@@ -76,6 +82,8 @@ export const posts = [
     author: closingTheLoopMeta.author,
     tags: closingTheLoopMeta.tags || [],
     readingTime: closingTheLoopMeta.readingTime,
+    cover: closingTheLoopMeta.cover,
+    ogImage: closingTheLoopMeta.ogImage || closingTheLoopMeta.cover,
     Content: ClosingTheLoop,
   },
   {
@@ -86,6 +94,8 @@ export const posts = [
     author: cognitiveTieringMeta.author,
     tags: cognitiveTieringMeta.tags || [],
     readingTime: cognitiveTieringMeta.readingTime,
+    cover: cognitiveTieringMeta.cover,
+    ogImage: cognitiveTieringMeta.ogImage || cognitiveTieringMeta.cover,
     Content: CognitiveTiering,
   },
   {
@@ -96,6 +106,8 @@ export const posts = [
     author: resilienceFortressMeta.author,
     tags: resilienceFortressMeta.tags || [],
     readingTime: resilienceFortressMeta.readingTime,
+    cover: resilienceFortressMeta.cover,
+    ogImage: resilienceFortressMeta.ogImage || resilienceFortressMeta.cover,
     Content: ResilienceFortress,
   },
   {
@@ -106,6 +118,10 @@ export const posts = [
     author: observabilityIntelligenceMeta.author,
     tags: observabilityIntelligenceMeta.tags || [],
     readingTime: observabilityIntelligenceMeta.readingTime,
+    cover: observabilityIntelligenceMeta.cover,
+    ogImage:
+      observabilityIntelligenceMeta.ogImage ||
+      observabilityIntelligenceMeta.cover,
     Content: ObservabilityIntelligence,
   },
   {
@@ -116,6 +132,9 @@ export const posts = [
     author: humanAgentCoManagementMeta.author,
     tags: humanAgentCoManagementMeta.tags || [],
     readingTime: humanAgentCoManagementMeta.readingTime,
+    cover: humanAgentCoManagementMeta.cover,
+    ogImage:
+      humanAgentCoManagementMeta.ogImage || humanAgentCoManagementMeta.cover,
     Content: HumanAgentCoManagement,
   },
   {
@@ -126,6 +145,8 @@ export const posts = [
     author: recursiveSafetyMeta.author,
     tags: recursiveSafetyMeta.tags || [],
     readingTime: recursiveSafetyMeta.readingTime,
+    cover: recursiveSafetyMeta.cover,
+    ogImage: recursiveSafetyMeta.ogImage || recursiveSafetyMeta.cover,
     Content: RecursiveSafety,
   },
   {
@@ -136,6 +157,8 @@ export const posts = [
     author: roadmapToAutonomyMeta.author,
     tags: roadmapToAutonomyMeta.tags || [],
     readingTime: roadmapToAutonomyMeta.readingTime,
+    cover: roadmapToAutonomyMeta.cover,
+    ogImage: roadmapToAutonomyMeta.ogImage || roadmapToAutonomyMeta.cover,
     Content: RoadmapToAutonomy,
   },
   {
@@ -146,6 +169,8 @@ export const posts = [
     author: livingRepositoryMeta.author,
     tags: livingRepositoryMeta.tags || [],
     readingTime: livingRepositoryMeta.readingTime,
+    cover: livingRepositoryMeta.cover,
+    ogImage: livingRepositoryMeta.ogImage || livingRepositoryMeta.cover,
     Content: LivingRepository,
   },
   {
@@ -156,6 +181,8 @@ export const posts = [
     author: theAgenticWallMeta.author,
     tags: theAgenticWallMeta.tags || [],
     readingTime: theAgenticWallMeta.readingTime,
+    cover: theAgenticWallMeta.cover,
+    ogImage: theAgenticWallMeta.ogImage || theAgenticWallMeta.cover,
     Content: TheAgenticWall,
   },
   {
@@ -166,6 +193,9 @@ export const posts = [
     author: futureHumanFriendlyCodeMeta.author,
     tags: futureHumanFriendlyCodeMeta.tags || [],
     readingTime: futureHumanFriendlyCodeMeta.readingTime,
+    cover: futureHumanFriendlyCodeMeta.cover,
+    ogImage:
+      futureHumanFriendlyCodeMeta.ogImage || futureHumanFriendlyCodeMeta.cover,
     Content: FutureHumanFriendlyCode,
   },
   {
@@ -176,6 +206,8 @@ export const posts = [
     author: visualizingInvisibleMeta.author,
     tags: visualizingInvisibleMeta.tags || [],
     readingTime: visualizingInvisibleMeta.readingTime,
+    cover: visualizingInvisibleMeta.cover,
+    ogImage: visualizingInvisibleMeta.ogImage || visualizingInvisibleMeta.cover,
     Content: VisualizingInvisible,
   },
   {
@@ -186,6 +218,8 @@ export const posts = [
     author: invisibleCodebaseMeta.author,
     tags: invisibleCodebaseMeta.tags || [],
     readingTime: invisibleCodebaseMeta.readingTime,
+    cover: invisibleCodebaseMeta.cover,
+    ogImage: invisibleCodebaseMeta.ogImage || invisibleCodebaseMeta.cover,
     Content: InvisibleCodebase,
   },
   {
@@ -196,6 +230,8 @@ export const posts = [
     author: aiCodeDebtTsunamiMeta.author,
     tags: aiCodeDebtTsunamiMeta.tags || [],
     readingTime: aiCodeDebtTsunamiMeta.readingTime,
+    cover: aiCodeDebtTsunamiMeta.cover,
+    ogImage: aiCodeDebtTsunamiMeta.ogImage || aiCodeDebtTsunamiMeta.cover,
     Content: AiCodeDebtTsunami,
   },
   {
@@ -206,6 +242,8 @@ export const posts = [
     author: metricsThatMatterMeta.author,
     tags: metricsThatMatterMeta.tags || [],
     readingTime: metricsThatMatterMeta.readingTime,
+    cover: metricsThatMatterMeta.cover,
+    ogImage: metricsThatMatterMeta.ogImage || metricsThatMatterMeta.cover,
     Content: MetricsThatMatter,
   },
   {
@@ -216,6 +254,10 @@ export const posts = [
     author: semanticDuplicateDetectionMeta.author,
     tags: semanticDuplicateDetectionMeta.tags || [],
     readingTime: semanticDuplicateDetectionMeta.readingTime,
+    cover: semanticDuplicateDetectionMeta.cover,
+    ogImage:
+      semanticDuplicateDetectionMeta.ogImage ||
+      semanticDuplicateDetectionMeta.cover,
     Content: SemanticDuplicateDetection,
   },
   {
@@ -226,6 +268,9 @@ export const posts = [
     author: hiddenCostImportChainsMeta.author,
     tags: hiddenCostImportChainsMeta.tags || [],
     readingTime: hiddenCostImportChainsMeta.readingTime,
+    cover: hiddenCostImportChainsMeta.cover,
+    ogImage:
+      hiddenCostImportChainsMeta.ogImage || hiddenCostImportChainsMeta.cover,
     Content: HiddenCostImportChains,
   },
 ];

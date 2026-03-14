@@ -9,6 +9,8 @@ export type BlogPost = {
   author: string;
   tags: string[];
   readingTime: string;
+  cover?: string;
+  ogImage?: string;
   Content: React.ComponentType<any>;
 };
 

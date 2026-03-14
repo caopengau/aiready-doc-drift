@@ -9,17 +9,6 @@ interface Params {
   params: { slug: string };
 }
 
-const imageMap: Record<string, string> = {
-  'ai-code-debt-tsunami': '/series-1-the-ai-code-debt-tsunami.png',
-  'invisible-codebase': '/series-2-invisible-to-ai.png',
-  'metrics-that-actually-matter': '/series-3-metrics-that-matters.png',
-  'semantic-duplicate-detection': '/series-4-semantic-duplicate-detection.png',
-  'hidden-cost-import-chains': '/series-5-hidden-cost-import-chains.png',
-  'visualizing-invisible': '/series-6-visualise-invisible-debt.png',
-  'future-human-friendly-code': '/series-7-future-human-friendly-code.png',
-  'the-agentic-wall': '/agentic-shift-series-1.png',
-};
-
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const resolvedParams = await params;
   const { slug } = resolvedParams;
@@ -31,8 +20,10 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     };
   }
 
-  const ogImage = imageMap[slug] || '/logo-text.png';
-  const fullImageUrl = `https://getaiready.dev${ogImage}`;
+  const ogImage = post.ogImage || post.cover || '/logo-text.png';
+  const fullImageUrl = ogImage.startsWith('http')
+    ? ogImage
+    : `https://getaiready.dev${ogImage}`;
   const canonicalUrl = `https://getaiready.dev/blog/${slug}`;
 
   return {
