@@ -23,15 +23,15 @@ export async function analyzeDeps(options: DepsOptions): Promise<DepsReport> {
 
     let deps: string[] = [];
     if (type === 'npm') {
-      deps = analyzeNpm(manifest.path, content, issues);
+      deps = analyzeNpm(manifest.path, content);
     } else if (type === 'python') {
-      deps = analyzePython(manifest.path, content, issues);
+      deps = analyzePython(manifest.path, content);
     } else if (type === 'maven') {
-      deps = analyzeMaven(manifest.path, content, issues);
+      deps = analyzeMaven(manifest.path, content);
     } else if (type === 'go') {
-      deps = analyzeGo(manifest.path, content, issues);
+      deps = analyzeGo(manifest.path, content);
     } else if (type === 'dotnet') {
-      deps = analyzeDotnet(manifest.path, content, issues);
+      deps = analyzeDotnet(manifest.path, content);
     }
 
     totalPackages += deps.length;
@@ -129,11 +129,7 @@ function findManifests(dir: string, exclude: string[]): ManifestInfo[] {
   return results;
 }
 
-function analyzeNpm(
-  path: string,
-  content: string,
-  _issues: DepsIssue[]
-): string[] {
+function analyzeNpm(path: string, content: string): string[] {
   try {
     const pkg = JSON.parse(content);
     const deps = { ...pkg.dependencies, ...pkg.devDependencies };
@@ -143,11 +139,7 @@ function analyzeNpm(
   }
 }
 
-function analyzePython(
-  path: string,
-  content: string,
-  _issues: DepsIssue[]
-): string[] {
+function analyzePython(path: string, content: string): string[] {
   // Regex for requirements.txt: package==version or package>=version
   if (path.endsWith('requirements.txt')) {
     return content
@@ -159,21 +151,13 @@ function analyzePython(
   return []; // Simplified for Pipfile/pyproject.toml
 }
 
-function analyzeMaven(
-  path: string,
-  content: string,
-  _issues: DepsIssue[]
-): string[] {
+function analyzeMaven(path: string, content: string): string[] {
   // Regex for pom.xml <artifactId>
   const matches = content.matchAll(/<artifactId>(.*?)<\/artifactId>/g);
   return Array.from(matches).map((m) => m[1]);
 }
 
-function analyzeGo(
-  path: string,
-  content: string,
-  _issues: DepsIssue[]
-): string[] {
+function analyzeGo(path: string, content: string): string[] {
   // Regex for go.mod 'require (...)' or 'require package version'
   const matches = content.matchAll(/require\s+(?![( \s])([^\s]+)/g);
   const direct = Array.from(matches).map((m) => m[1]);
@@ -189,11 +173,7 @@ function analyzeGo(
   return direct;
 }
 
-function analyzeDotnet(
-  path: string,
-  content: string,
-  _issues: DepsIssue[]
-): string[] {
+function analyzeDotnet(path: string, content: string): string[] {
   // Regex for .csproj <PackageReference Include="PackageName" />
   const matches = content.matchAll(/<PackageReference\s+Include="(.*?)"/g);
   return Array.from(matches).map((m) => m[1]);
