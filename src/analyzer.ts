@@ -11,6 +11,16 @@ import {
 import type { DocDriftOptions, DocDriftReport, DocDriftIssue } from './types';
 import { readFileSync } from 'fs';
 
+/**
+ * Analyzes documentation drift across a set of files.
+ * This tool detects:
+ * 1. Missing documentation for complex functions/classes.
+ * 2. Signature mismatches (parameters not mentioned in docs).
+ * 3. Temporal drift (logic changed after documentation was last updated).
+ *
+ * @param options - Analysis configuration including include/exclude patterns and drift thresholds.
+ * @returns A comprehensive report with drift scores and specific issues.
+ */
 export async function analyzeDocDrift(
   options: DocDriftOptions
 ): Promise<DocDriftReport> {
