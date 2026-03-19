@@ -68,28 +68,29 @@ export async function initAction(options: {
       [ToolName.PatternDetect]: {
         minSimilarity: 0.8,
         minLines: 5,
+        minSharedTokens: 10,
+        approx: true,
         ...(options.full
           ? {
-              batchSize: 50,
-              approx: true,
-              minSharedTokens: 10,
-              maxCandidatesPerBlock: 100,
+              batchSize: 300,
+              maxCandidatesPerBlock: 500,
+              minClusterFiles: 3,
+              minClusterTokenCost: 1000,
             }
           : {}),
       },
       [ToolName.ContextAnalyzer]: {
         maxContextBudget: 128000,
         minCohesion: 0.6,
-        ...(options.full
-          ? {
-              maxDepth: 7,
-              maxFragmentation: 0.4,
-              focus: 'all',
-              includeNodeModules: false,
-            }
-          : {}),
+        maxDepth: 7,
+        maxFragmentation: 0.4,
+        focus: 'all',
+        includeNodeModules: false,
       },
       [ToolName.NamingConsistency]: {
+        checkNaming: true,
+        checkPatterns: true,
+        checkArchitecture: true,
         shortWords: ['id', 'db', 'ui', 'ai'],
         acceptedAbbreviations: [
           'API',
@@ -116,6 +117,12 @@ export async function initAction(options: {
           'config',
           'INIT',
           'SKILL',
+          'ENV',
+          'DEV',
+          'PROD',
+          'AWS',
+          'S3',
+          'ARN',
         ],
         ...(options.full ? { disableChecks: [] } : {}),
       },
@@ -124,17 +131,20 @@ export async function initAction(options: {
         checkBooleanTraps: true,
         checkAmbiguousNames: true,
         checkUndocumentedExports: true,
-        ...(options.full
-          ? { checkImplicitSideEffects: false, checkDeepCallbacks: false }
-          : {}),
+        checkImplicitSideEffects: true,
+        checkDeepCallbacks: true,
+        checkOverloadedSymbols: true,
+        checkLargeFiles: true,
       },
       [ToolName.AgentGrounding]: {
         maxRecommendedDepth: 5,
         readmeStaleDays: 30,
+        additionalVagueNames: ['stuff', 'misc', 'temp', 'test'],
       },
       [ToolName.TestabilityIndex]: {
         minCoverageRatio: 0.7,
-        testPatterns: ['**/*.test.ts', '**/__tests__/**'],
+        testPatterns: ['**/*.test.ts', '**/__tests__/**', '**/*.spec.ts'],
+        maxDepth: 10,
       },
       [ToolName.DocDrift]: {
         maxCommits: 50,
@@ -144,7 +154,7 @@ export async function initAction(options: {
         trainingCutoffYear: 2023,
       },
       [ToolName.ChangeAmplification]: {
-        // No specific options yet, uses global scan settings
+        // Change amplification primarily relies on global scan settings
       },
     },
 
