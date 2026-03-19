@@ -14,6 +14,12 @@ export function getClassificationRecommendations(
   issues: string[]
 ): string[] {
   switch (classification) {
+    case 'boilerplate-barrel':
+      return [
+        'Redundant indirection detected (architectural theater)',
+        'Remove this pass-through barrel export to reduce cognitive load',
+        'Consider combining into meaningful domain exports if necessary',
+      ];
     case 'barrel-export':
       return [
         'Barrel export file detected - multiple domains are expected here',

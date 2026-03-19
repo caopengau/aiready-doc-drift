@@ -65,13 +65,47 @@ const CONFIG_NAME_PATTERNS = [
 ];
 
 /**
+ * Detect if a file is a boilerplate barrel (architectural theater).
+ * A boilerplate barrel re-exports from other sources without adding value.
+ *
+ * @param node - The dependency node to analyze.
+ * @returns True if the file matches boilerplate barrel patterns.
+ */
+export function isBoilerplateBarrel(node: DependencyNode): boolean {
+  const { exports, tokenCost } = node;
+  if (!exports || exports.length === 0) return false;
+
+  // 1. Must be purely re-exports
+  const isPurelyReexports = exports.every((exp: any) => !!exp.source);
+  if (!isPurelyReexports) return false;
+
+  // 2. Must be low local token cost (no actual logic)
+  if (tokenCost > 500) return false;
+
+  // 3. Detect "Architectural Theater"
+  // If it re-exports everything from exactly ONE source, it's a pass-through
+  const sources = new Set(exports.map((exp: any) => exp.source));
+
+  // Pattern: export * from '../actual'
+  const isSingleSourcePassThrough = sources.size === 1;
+
+  // Pattern: multi-file 1-to-1 re-exports that don't aggregate much
+  // (e.g., 6 files each re-exporting from exactly one other file)
+  const isMeaninglessAggregation = sources.size > 0 && sources.size < 3;
+
+  return isSingleSourcePassThrough || isMeaninglessAggregation;
+}
+
+/**
  * Detect if a file is a barrel export (index.ts).
  *
  * @param node - The dependency node to analyze.
  * @returns True if the file matches barrel export patterns.
- * @lastUpdated 2026-03-18
+ * @lastUpdated 2026-03-20
  */
 export function isBarrelExport(node: DependencyNode): boolean {
+  if (isBoilerplateBarrel(node)) return false; // Already handled by more specific check
+
   const { file, exports } = node;
   const fileName = file.split('/').pop()?.toLowerCase();
 

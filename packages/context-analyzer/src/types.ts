@@ -80,6 +80,7 @@ export interface ContextAnalysisResult {
  */
 export type FileClassification =
   | 'barrel-export' // Re-exports from other modules (index.ts files)
+  | 'boilerplate-barrel' // Redundant barrel file with no added value (architectural theater)
   | 'type-definition' // Primarily type/interface definitions
   | 'cohesive-module' // Single domain, high cohesion (acceptable large files)
   | 'utility-module' // Utility/helper files with cohesive purpose despite multi-domain

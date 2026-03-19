@@ -1,6 +1,7 @@
 import type { DependencyNode, FileClassification } from './types';
 import {
   isBarrelExport,
+  isBoilerplateBarrel,
   isTypeDefinition,
   isNextJsPage,
   isLambdaHandler,
@@ -18,6 +19,7 @@ import {
  */
 export const Classification = {
   BARREL: 'barrel-export' as const,
+  BOILERPLATE: 'boilerplate-barrel' as const,
   TYPE_DEFINITION: 'type-definition' as const,
   NEXTJS_PAGE: 'nextjs-page' as const,
   LAMBDA_HANDLER: 'lambda-handler' as const,
@@ -44,7 +46,12 @@ export function classifyFile(
   cohesionScore: number = 1,
   domains: string[] = []
 ): FileClassification {
-  // 1. Detect barrel exports (primarily re-exports)
+  // 1. Detect boilerplate barrels (pure indirection/architectural theater)
+  if (isBoilerplateBarrel(node)) {
+    return Classification.BOILERPLATE;
+  }
+
+  // 2. Detect legitimate barrel exports (primarily re-exports that aggregate)
   if (isBarrelExport(node)) {
     return Classification.BARREL;
   }
@@ -134,6 +141,8 @@ export function adjustCohesionForClassification(
   node?: DependencyNode
 ): number {
   switch (classification) {
+    case Classification.BOILERPLATE:
+      return 0.2; // Redundant indirection is low cohesion (architectural theater)
     case Classification.BARREL:
       return 1;
     case Classification.TYPE_DEFINITION:
@@ -235,6 +244,8 @@ export function adjustFragmentationForClassification(
   classification: FileClassification
 ): number {
   switch (classification) {
+    case Classification.BOILERPLATE:
+      return baseFragmentation * 1.5; // Redundant barrels increase fragmentation
     case Classification.BARREL:
       return 0;
     case Classification.TYPE_DEFINITION:
