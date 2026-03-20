@@ -64,30 +64,33 @@ export default $config({
       ],
     });
 
-    // Deploy as static site - animations and charts work perfectly in client-side mode
-    const site = new sst.aws.StaticSite('AireadyLanding', {
-      path: './',
-      build: {
-        command: 'pnpm build',
-        output: 'out',
-      },
-      environment: {
-        NEXT_PUBLIC_REQUEST_URL: api.url,
-      },
-      domain: {
-        name:
-          $app.stage === 'production'
-            ? 'getaiready.dev'
-            : `${$app.stage}.getaiready.dev`,
-        dns: sst.cloudflare.dns({
-          zone: cloudflareZoneId,
-        }),
-      },
-      invalidation: {
-        paths: ['/*'],
-        wait: true,
-      },
-    });
+    // Static site - currently disabled (only health check infrastructure needed)
+    // const site = new sst.aws.StaticSite('AireadyLanding', {
+    //   path: './',
+    //   build: {
+    //     command: 'pnpm build',
+    //     output: 'out',
+    //   },
+    //   environment: {
+    //     NEXT_PUBLIC_REQUEST_URL: api.url,
+    //   },
+    //   domain: {
+    //     name:
+    //       $app.stage === 'production'
+    //         ? 'getaiready.dev'
+    //         : `${$app.stage}.getaiready.dev`,
+    //     dns: sst.cloudflare.dns({
+    //       zone: cloudflareZoneId,
+    //     }),
+    //   },
+    //   invalidation: {
+    //     paths: ['/*'],
+    //     wait: true,
+    //   },
+    // });
+
+    // Placeholder for site URL (not deployed)
+    const siteUrl = 'https://getaiready.dev';
 
     /*
     // VS Code Marketplace publisher verification
@@ -146,13 +149,10 @@ export default $config({
     */
 
     // SNS Topic for health check alerts
-    const healthAlertsTopic = new sst.aws.SnsTopic('HealthAlerts');
-
-    // Subscribe email to the topic
-    new sst.aws.SnsSubscription('HealthAlertsEmail', {
-      topic: healthAlertsTopic,
-      endpoint: 'caopengau@gmail.com',
-      filterPolicy: {},
+    const healthAlertsTopic = new sst.aws.SnsTopic('HealthAlerts', {
+      subscriptions: {
+        email: process.env.SES_TO_EMAIL || 'caopengau@gmail.com',
+      },
     });
 
     // API Gateway for health check worker to publish alerts
@@ -175,7 +175,7 @@ export default $config({
     });
 
     return {
-      site: site.url,
+      site: siteUrl,
       apiUrl: api.url,
       submissionsBucket: submissions.name,
       emailDomain: emailDomain?.sender ?? domainName,

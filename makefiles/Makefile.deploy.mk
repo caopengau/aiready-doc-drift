@@ -9,7 +9,7 @@ include $(MAKEFILE_DIR)/Makefile.shared.mk
 .PHONY: deploy-platform deploy-platform-prod deploy-platform-remove platform-logs platform-verify
 .PHONY: deploy-clawmore deploy-clawmore-dev deploy-clawmore-prod clawmore-verify
 .PHONY: ses-domain-status ses-production-access-status ses-request-production-access
-.PHONY: deploy-health-check health-check-config health-check-logs
+.PHONY: deploy-health-check health-check-config health-check-logs deploy-health-check-full
 
 SES_MAIL_TYPE ?= TRANSACTIONAL
 SES_WEBSITE_URL ?= https://$(DOMAIN_NAME)
@@ -336,6 +336,46 @@ landing-cleanup: ## Clean up stale AWS resources from old deployments
 	@echo "$(CYAN)💡 Certificates are auto-deleted when CloudFront distributions are removed$(NC)"
 	@echo ""
 	@$(call log_success,Cleanup scan complete)
+
+##@ Health Check Deployment (Automated)
+
+deploy-health-check-full: verify-aws-account ## Deploy complete health check infrastructure (landing + worker) in one command
+	@$(call log_step,Deploying complete health check infrastructure)
+	@echo "$(CYAN)Step 1: Deploying landing stack (SNS + API)...$(NC)"
+	@cd landing && \
+		set -a && [ -f .env ] && . ./.env || true && set +a && \
+		export AWS_PROFILE=$${AWS_PROFILE:-$(AWS_PROFILE)} && \
+		export AWS_REGION=$${AWS_REGION:-$(AWS_REGION)} && \
+		sst deploy --yes
+	@$(call log_success,Landing stack deployed with SNS topic)
+	@echo ""
+	@$(call log_step,Setting HEALTH_API_URL secret in Cloudflare Worker)
+	@echo "$(CYAN)Using known Health API URL: https://snaoya2e7j.execute-api.ap-southeast-2.amazonaws.com$(NC)"
+	@( \
+		set -a && [ -f landing/.env ] && . landing/.env || true && set +a && \
+		export CLOUDFLARE_API_TOKEN && \
+		cd workers/health-check && \
+		echo "https://snaoya2e7j.execute-api.ap-southeast-2.amazonaws.com" | pnpm wrangler secret put HEALTH_API_URL \
+	)
+	@$(call log_success,Secret configured)
+	@echo ""
+	@$(call log_step,Deploying Cloudflare Worker)
+	@( \
+		set -a && [ -f landing/.env ] && . landing/.env || true && set +a && \
+		export CLOUDFLARE_API_TOKEN && \
+		cd workers/health-check && \
+		pnpm deploy \
+	)
+	@$(call log_success,Health check worker deployed)
+	@echo ""
+	@echo "$(GREEN)✅ Health check infrastructure deployed successfully!$(NC)"
+	@echo ""
+	@echo "$(CYAN)Next steps:$(NC)"
+	@echo "$(CYAN)1. Subscribe to SNS for email alerts:$(NC)"
+	@echo "$(GREEN)   AWS Console → SNS → Topics → aiready-landing-*-HealthAlerts → Subscribe$(NC)"
+	@echo ""
+	@echo "$(CYAN)2. View worker logs:$(NC)"
+	@echo "$(GREEN)   make health-check-logs$(NC)"
 
 ##@ Health Check Deployment
 
