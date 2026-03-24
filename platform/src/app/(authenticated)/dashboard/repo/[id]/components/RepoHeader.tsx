@@ -78,7 +78,10 @@ export function RepoHeader({ repo, analysis, onViewConfig }: RepoHeaderProps) {
             {repo.url}
           </a>
           {analysis && (
-            <div className="text-slate-500 flex items-center gap-1.5">
+            <div
+              className="text-slate-500 flex items-center gap-1.5"
+              suppressHydrationWarning
+            >
               <PlayIcon className="w-3.5 h-3.5 rotate-90" />
               Last analyzed{' '}
               {new Date(analysis.metadata.timestamp).toLocaleString()}

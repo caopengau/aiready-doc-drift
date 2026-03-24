@@ -7,6 +7,9 @@ import { randomUUID } from 'crypto';
 import { getRemediation, updateRemediation } from '../lib/db/remediation';
 import { getRepository } from '../lib/db/repositories';
 
+// Force bundling of agents for dynamic loading
+import '../../../packages/agents';
+
 export async function handler(event: SQSEvent) {
   for (const record of event.Records) {
     const {

@@ -235,7 +235,7 @@ export function RepoCard({
       </div>
 
       {repo.lastAnalysisAt && (
-        <p className="text-xs text-slate-500 -mt-1">
+        <p className="text-xs text-slate-500 -mt-1" suppressHydrationWarning>
           Last analyzed {new Date(repo.lastAnalysisAt).toLocaleDateString()}
         </p>
       )}

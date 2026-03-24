@@ -19,6 +19,8 @@ function getStripe(): Stripe {
 export interface PlatformSubscriptionOpts {
   customerId?: string;
   userEmail: string;
+  userName?: string;
+  repoName?: string;
   coEvolutionOptIn?: boolean;
   successUrl: string;
   cancelUrl: string;
@@ -34,6 +36,8 @@ export async function createPlatformSubscriptionSession(
   const {
     customerId,
     userEmail,
+    userName = 'Valued Client',
+    repoName,
     coEvolutionOptIn = false,
     successUrl,
     cancelUrl,
@@ -41,6 +45,10 @@ export async function createPlatformSubscriptionSession(
 
   // Use the linked price ID from SST if it exists
   const priceId = (Resource as any).PlatformPrice?.id;
+
+  // Auto-generate repo name if not provided
+  const finalRepoName =
+    repoName || `serverlessclaw-instance-${Date.now().toString(36)}`;
 
   return await getStripe().checkout.sessions.create({
     customer: customerId,
@@ -73,12 +81,16 @@ export async function createPlatformSubscriptionSession(
       type: 'platform_subscription',
       coEvolutionOptIn: coEvolutionOptIn ? 'true' : 'false',
       userEmail,
+      userName,
+      repoName: finalRepoName,
     },
     subscription_data: {
       description: `ClawMore Managed - ${userEmail}`,
       metadata: {
         coEvolutionOptIn: coEvolutionOptIn ? 'true' : 'false',
         userEmail,
+        userName,
+        repoName: finalRepoName,
       },
     },
   });

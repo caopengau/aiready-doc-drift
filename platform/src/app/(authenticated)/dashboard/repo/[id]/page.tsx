@@ -8,12 +8,13 @@ interface Props {
 }
 
 export default async function RepoDetailPage({ params }: Props) {
+  const { id } = await params;
   const session = await auth();
   if (!session?.user) {
     redirect('/api/auth/signin');
   }
 
-  const repo = await getRepository(params.id);
+  const repo = await getRepository(id);
   if (!repo) {
     notFound();
   }

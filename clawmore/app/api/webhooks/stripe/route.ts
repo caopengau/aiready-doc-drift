@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
+import { ProvisioningOrchestrator } from '../../../../lib/onboarding/provision-node';
 
 const dbClient = new DynamoDBClient({
   region: process.env.AWS_REGION || 'ap-southeast-2',
@@ -47,6 +48,9 @@ export async function POST(req: NextRequest) {
         if (session.metadata?.type === 'platform_subscription') {
           const userEmail =
             session.customer_email || session.metadata?.userEmail;
+          const userName = session.metadata?.userName || 'Valued Client';
+          const repoName = session.metadata?.repoName;
+
           if (userEmail) {
             // Find the user by email in DynamoDB using GSI1
             const res = await docClient.query({
@@ -68,7 +72,7 @@ export async function POST(req: NextRequest) {
                 TableName,
                 Key: { PK: `USER#${userId}`, SK: 'METADATA' },
                 UpdateExpression:
-                  'SET stripeCustomerId = :customerId, stripeSubscriptionId = :subscriptionId, plan = :plan, aiFuelBalanceCents = if_not_exists(aiFuelBalanceCents, :zero) + :initialFuel, coEvolutionOptIn = :coEvo',
+                  'SET stripeCustomerId = :customerId, stripeSubscriptionId = :subscriptionId, plan = :plan, aiTokenBalanceCents = if_not_exists(aiTokenBalanceCents, :zero) + :initialFuel, coEvolutionOptIn = :coEvo, approvedStatus = :status',
                 ExpressionAttributeValues: {
                   ':customerId': session.customer as string,
                   ':subscriptionId': session.subscription as string,
@@ -76,8 +80,41 @@ export async function POST(req: NextRequest) {
                   ':initialFuel': 1000, // $10 initial fuel
                   ':zero': 0,
                   ':coEvo': session.metadata?.coEvolutionOptIn === 'true',
+                  ':status': 'APPROVED',
                 },
               });
+
+              // Trigger Autonomous Provisioning
+              const githubToken = process.env.GITHUB_SERVICE_TOKEN;
+              if (githubToken && repoName) {
+                console.log(
+                  `[Webhook] Triggering provisioning for ${userEmail}...`
+                );
+                const orchestrator = new ProvisioningOrchestrator(githubToken);
+
+                orchestrator
+                  .provisionNode({
+                    userEmail,
+                    userName,
+                    repoName,
+                    githubToken,
+                    coEvolutionOptIn:
+                      session.metadata?.coEvolutionOptIn === 'true',
+                  })
+                  .then((result) => {
+                    console.log(
+                      `[Webhook] Provisioning complete for ${userEmail}:`,
+                      result.accountId
+                    );
+                  })
+                  .catch((err) => {
+                    console.error(
+                      `[Webhook] Provisioning FAILED for ${userEmail}:`,
+                      err
+                    );
+                  });
+              }
+
               console.log(
                 `Initialized managed subscription for user ${userId} (${userEmail})`
               );
@@ -112,7 +149,7 @@ export async function POST(req: NextRequest) {
               TableName,
               Key: { PK: `USER#${userId}`, SK: 'METADATA' },
               UpdateExpression:
-                'SET aiFuelBalanceCents = if_not_exists(aiFuelBalanceCents, :zero) + :amount',
+                'SET aiTokenBalanceCents = if_not_exists(aiTokenBalanceCents, :zero) + :amount',
               ExpressionAttributeValues: {
                 ':amount': amountCents,
                 ':zero': 0,
@@ -152,7 +189,7 @@ export async function POST(req: NextRequest) {
               TableName,
               Key: { PK: `USER#${userId}`, SK: 'METADATA' },
               UpdateExpression:
-                'SET aiFuelBalanceCents = if_not_exists(aiFuelBalanceCents, :zero) + :amount',
+                'SET aiTokenBalanceCents = if_not_exists(aiTokenBalanceCents, :zero) + :amount',
               ExpressionAttributeValues: {
                 ':amount': 1000,
                 ':zero': 0,

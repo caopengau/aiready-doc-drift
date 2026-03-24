@@ -83,7 +83,7 @@ export async function updateRepositoryScore(
 export async function setRepositoryScanning(
   repoId: string,
   isScanning: boolean,
-  lastError?: string
+  lastError?: string | null
 ): Promise<void> {
   const updates: any = { isScanning };
   if (lastError !== undefined) {

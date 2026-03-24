@@ -17,6 +17,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const tokenMasked = session.user.accessToken
+      ? `${session.user.accessToken.slice(0, 4)}...${session.user.accessToken.slice(-4)}`
+      : 'none';
+    console.log(
+      `[ScanAPI] Triggering scan for user ${userId}. AccessToken: ${tokenMasked}`
+    );
+
     const { repoId } = await request.json();
     if (!repoId) {
       return NextResponse.json(

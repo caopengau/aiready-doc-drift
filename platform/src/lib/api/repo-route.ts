@@ -20,9 +20,7 @@ export async function withRepoAuth(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = (paramsPromise as any).then
-      ? await paramsPromise
-      : (paramsPromise as any);
+    const { id } = await paramsPromise;
     const repo = await getRepository(id);
     if (!repo) {
       return NextResponse.json(

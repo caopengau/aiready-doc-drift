@@ -19,6 +19,18 @@ import {
   setRepositoryScanning,
 } from '../lib/db';
 
+// Force bundling of spokes for dynamic loading
+import '../../../packages/pattern-detect';
+import '../../../packages/context-analyzer';
+import '../../../packages/consistency';
+import '../../../packages/change-amplification';
+import '../../../packages/ai-signal-clarity';
+import '../../../packages/agent-grounding';
+import '../../../packages/testability';
+import '../../../packages/doc-drift';
+import '../../../packages/deps';
+import '../../../packages/agents';
+
 export async function handler(event: SQSEvent) {
   for (const record of event.Records) {
     const { repoId, userId, accessToken } = JSON.parse(record.body) as {
@@ -27,7 +39,12 @@ export async function handler(event: SQSEvent) {
       accessToken?: string;
     };
 
-    console.log(`[ScanWorker] Processing repo ${repoId} for user ${userId}`);
+    const tokenMasked = accessToken
+      ? `${accessToken.slice(0, 4)}...${accessToken.slice(-4)}`
+      : 'none';
+    console.log(
+      `[ScanWorker] Processing repo ${repoId} for user ${userId}. AccessToken: ${tokenMasked}`
+    );
 
     const repo = await getRepository(repoId);
     if (!repo) {
@@ -61,17 +78,27 @@ export async function handler(event: SQSEvent) {
       });
 
       console.log(
-        `[ScanWorker] Current commit: ${currentCommit}. Last scanned: ${repo.lastCommitHash}`
+        `[ScanWorker] Current commit: ${currentCommit}. Last scanned: ${repo.lastCommitHash}. Last error: ${repo.lastError || 'none'}`
       );
 
-      if (repo.lastCommitHash === currentCommit) {
+      // Force re-scan if repo has an error or commit has changed
+      if (repo.lastCommitHash === currentCommit && !repo.lastError) {
         console.log(
-          `[ScanWorker] No changes detected for repo ${repoId}. Skipping scan.`
+          `[ScanWorker] No changes and no previous errors for repo ${repoId}. Skipping scan.`
         );
         // Just clear the scanning flag
         await setRepositoryScanning(repoId, false);
         return;
       }
+
+      if (repo.lastError) {
+        console.log(
+          `[ScanWorker] Previous error detected (${repo.lastError}). Forcing re-scan despite commit match.`
+        );
+      }
+
+      // Start the analysis
+      await setRepositoryScanning(repoId, true, null);
 
       console.log(`[ScanWorker] Running AIReady analysis...`);
 
