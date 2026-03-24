@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { auth } from '../../../../auth';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocument, GetCommand } from '@aws-sdk/lib-dynamodb';
+import { sendApprovalEmail } from '../../../../lib/email';
 
 const dbClient = new DynamoDBClient({
   region: process.env.AWS_REGION || 'ap-southeast-2',
@@ -52,6 +53,19 @@ export async function PATCH(request: Request) {
     if (!id)
       return NextResponse.json({ error: 'ID is required' }, { status: 400 });
 
+    // Fetch user details first to send email if approved
+    const userRes = await documentClient.send(
+      new GetCommand({
+        TableName: process.env.DYNAMO_TABLE!,
+        Key: {
+          PK: `USER#${id}`,
+          SK: `USER#${id}`,
+        },
+      })
+    );
+
+    const user = userRes.Item;
+
     // Update user status
     await documentClient.update({
       TableName: process.env.DYNAMO_TABLE!,
@@ -67,6 +81,14 @@ export async function PATCH(request: Request) {
         ':s': status,
       },
     });
+
+    // If newly approved, send email
+    if (status === 'APPROVED' && user?.email) {
+      // Don't await email sending to keep response fast
+      sendApprovalEmail(user.email, user.name || 'Developer').catch(
+        console.error
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
@@ -110,6 +132,9 @@ export async function POST(request: Request) {
         createdAt: new Date().toISOString(),
       },
     });
+
+    // Send notification
+    await sendApprovalEmail(email, name || 'Pre-approved User');
 
     return NextResponse.json({ success: true });
   } catch (err: any) {

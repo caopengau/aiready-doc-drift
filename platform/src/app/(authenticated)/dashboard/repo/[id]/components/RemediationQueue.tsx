@@ -50,11 +50,43 @@ export function RemediationQueue({
     }
   }, [repoId]);
 
+  const prevRemediationsRef = useState<RemediationRequest[]>([]);
+  const [prevRemediations, setPrevRemediations] = prevRemediationsRef;
+
   useEffect(() => {
     fetchRemediations();
     const interval = setInterval(fetchRemediations, 5000); // Poll for agent status
     return () => clearInterval(interval);
   }, [fetchRemediations]);
+
+  // Detect status changes for notifications
+  useEffect(() => {
+    if (prevRemediations.length > 0) {
+      remediations.forEach((curr) => {
+        const prev = prevRemediations.find((p) => p.id === curr.id);
+        if (prev && prev.status !== curr.status) {
+          if (curr.status === 'reviewing') {
+            toast.success(`PR Ready: ${curr.title}`, {
+              description: 'The AI agent has created a PR for your review.',
+              action: curr.prUrl
+                ? {
+                    label: 'View PR',
+                    onClick: () => window.open(curr.prUrl, '_blank'),
+                  }
+                : undefined,
+              duration: 10000,
+            });
+          } else if (curr.status === 'failed') {
+            toast.error(`Remediation Failed: ${curr.title}`, {
+              description:
+                curr.agentStatus || 'An error occurred during remediation.',
+            });
+          }
+        }
+      });
+    }
+    setPrevRemediations(remediations);
+  }, [remediations, prevRemediations, setPrevRemediations]);
 
   // Check if any remediation for this repo is currently in-progress
   const hasInProgressRemediation = remediations.some(

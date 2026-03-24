@@ -205,3 +205,19 @@ export async function getUserMetadata(
   );
   return (response.Item as UserMetadata) || null;
 }
+
+export async function getUserStatus(email: string): Promise<string | null> {
+  const response = await docClient.send(
+    new QueryCommand({
+      TableName: process.env.DYNAMO_TABLE,
+      IndexName: 'GSI1',
+      KeyConditionExpression: 'GSI1PK = :pk AND GSI1SK = :sk',
+      ExpressionAttributeValues: {
+        ':pk': 'USER',
+        ':sk': email,
+      },
+    })
+  );
+
+  return response.Items?.[0]?.status || null;
+}

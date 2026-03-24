@@ -347,6 +347,129 @@ This link will expire in 15 minutes. If you didn't request this email, you can s
 }
 
 /**
+ * Send remediation status notification
+ */
+export async function sendRemediationNotificationEmail(params: {
+  to: string;
+  repoName: string;
+  remediationTitle: string;
+  status: 'reviewing' | 'completed' | 'failed';
+  prUrl?: string;
+  prNumber?: number;
+  error?: string;
+  dashboardUrl: string;
+}): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const {
+    to,
+    repoName,
+    remediationTitle,
+    status,
+    prUrl,
+    prNumber,
+    error,
+    dashboardUrl,
+  } = params;
+
+  const subject =
+    status === 'failed'
+      ? `Remediation Failed: ${remediationTitle}`
+      : `Remediation Ready for Review: ${remediationTitle}`;
+
+  const statusColor = status === 'failed' ? '#ef4444' : '#10b981';
+  const statusLabel =
+    status === 'failed'
+      ? 'Failed'
+      : status === 'reviewing'
+        ? 'Ready for Review'
+        : 'Completed';
+
+  const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #0a0a0f; margin: 0; padding: 20px;">
+  <div style="max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); border-radius: 16px; border: 1px solid rgba(99, 102, 241, 0.3); overflow: hidden;">
+    
+    <!-- Header -->
+    <div style="padding: 24px; border-bottom: 1px solid rgba(99, 102, 241, 0.2); text-align: center;">
+      <h1 style="color: #fff; margin: 0; font-size: 24px; font-weight: 700;">AIReady</h1>
+      <p style="color: #94a3b8; margin: 8px 0 0 0; font-size: 14px;">Remediation Update</p>
+    </div>
+    
+    <!-- Status Section -->
+    <div style="padding: 32px; text-align: center;">
+      <div style="display: inline-block; background: rgba(0,0,0,0.3); border-radius: 16px; padding: 12px 24px; border: 1px solid ${statusColor};">
+        <div style="color: ${statusColor}; font-size: 14px; font-weight: 600;">${statusLabel}</div>
+      </div>
+      <h2 style="color: #fff; margin: 24px 0 8px 0; font-size: 20px;">${remediationTitle}</h2>
+      <p style="color: #94a3b8; margin: 0; font-size: 14px;">in ${repoName}</p>
+    </div>
+    
+    <!-- Details Section -->
+    <div style="padding: 0 24px 24px;">
+      ${
+        prUrl
+          ? `
+        <div style="background: rgba(30, 41, 59, 0.5); border-radius: 8px; padding: 16px; border: 1px solid rgba(34, 197, 94, 0.2); margin-bottom: 24px;">
+          <div style="color: #10b981; font-size: 12px; font-weight: 600; margin-bottom: 4px; text-transform: uppercase;">GitHub Pull Request Created</div>
+          <div style="color: #e2e8f0; font-size: 16px; font-weight: 700;">PR #${prNumber || ''}</div>
+          <a href="${prUrl}" style="display: inline-block; color: #3b82f6; text-decoration: underline; font-size: 14px; margin-top: 8px;">View PR on GitHub →</a>
+        </div>
+      `
+          : ''
+      }
+      
+      ${
+        error
+          ? `
+        <div style="background: rgba(239, 68, 68, 0.1); border-radius: 8px; padding: 16px; border: 1px solid rgba(239, 68, 68, 0.2); margin-bottom: 24px;">
+          <div style="color: #ef4444; font-size: 12px; font-weight: 600; margin-bottom: 4px; text-transform: uppercase;">Error Details</div>
+          <p style="color: #fca5a5; font-size: 14px; margin: 0;">${error}</p>
+        </div>
+      `
+          : ''
+      }
+    </div>
+    
+    <!-- CTA Button -->
+    <div style="padding: 0 24px 32px; text-align: center;">
+      <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #06b6d4); color: #fff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 14px;">
+        View Remediation Status
+      </a>
+    </div>
+    
+    <!-- Footer -->
+    <div style="padding: 20px 24px; border-top: 1px solid rgba(99, 102, 241, 0.2); text-align: center;">
+      <p style="color: #64748b; font-size: 12px; margin: 0;">
+        © 2026 AIReady · Make your codebase AI-ready
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const textBody = `
+AIReady Remediation Update: ${statusLabel}
+
+Remediation: ${remediationTitle}
+Repository: ${repoName}
+
+${prUrl ? `Pull Request Created: PR #${prNumber} - ${prUrl}` : ''}
+${error ? `Error: ${error}` : ''}
+
+View more details on your dashboard: ${dashboardUrl}
+
+© 2026 AIReady
+  `.trim();
+
+  return sendEmail({ to, subject, htmlBody, textBody });
+}
+
+/**
  * Format breakdown key for display
  */
 function formatBreakdownKey(key: string): string {

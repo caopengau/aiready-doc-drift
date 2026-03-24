@@ -5,6 +5,7 @@ import {
   getManagedAccountsForUser,
   getUserMetadata,
   getRecentMutationsForUser,
+  getUserStatus,
 } from '../../lib/db';
 
 export default async function DashboardPage() {
@@ -15,6 +16,19 @@ export default async function DashboardPage() {
   }
 
   const userEmail = session.user.email;
+
+  const adminEmails = process.env.ADMIN_EMAILS
+    ? process.env.ADMIN_EMAILS.split(',').map((e) => e.trim())
+    : ['admin@example.com'];
+  const isAdmin = session?.user?.email
+    ? adminEmails.includes(session.user.email)
+    : false;
+
+  // Beta Access Control: Check if user is approved
+  const status = await getUserStatus(userEmail);
+  if (status !== 'APPROVED' && !isAdmin) {
+    redirect(`/unauthorized?email=${encodeURIComponent(userEmail)}`);
+  }
 
   // 1. Fetch Managed Accounts
   const accounts = await getManagedAccountsForUser(userEmail);
@@ -41,13 +55,6 @@ export default async function DashboardPage() {
     autoTopupEnabled: metadata?.autoTopupEnabled ?? true,
     recentMutations: mutations,
   };
-
-  const adminEmails = process.env.ADMIN_EMAILS
-    ? process.env.ADMIN_EMAILS.split(',').map((e) => e.trim())
-    : ['admin@example.com'];
-  const isAdmin = session?.user?.email
-    ? adminEmails.includes(session.user.email)
-    : false;
 
   return (
     <DashboardClient

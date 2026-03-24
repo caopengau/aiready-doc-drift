@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 import { ProvisioningOrchestrator } from '../../../../lib/onboarding/provision-node';
+import { sendApprovalEmail } from '../../../../lib/email';
 
 const dbClient = new DynamoDBClient({
   region: process.env.AWS_REGION || 'ap-southeast-2',
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
                 TableName,
                 Key: { PK: `USER#${userId}`, SK: 'METADATA' },
                 UpdateExpression:
-                  'SET stripeCustomerId = :customerId, stripeSubscriptionId = :subscriptionId, plan = :plan, aiTokenBalanceCents = if_not_exists(aiTokenBalanceCents, :zero) + :initialFuel, coEvolutionOptIn = :coEvo, approvedStatus = :status',
+                  'SET stripeCustomerId = :customerId, stripeSubscriptionId = :subscriptionId, plan = :plan, aiTokenBalanceCents = if_not_exists(aiTokenBalanceCents, :zero) + :initialFuel, coEvolutionOptIn = :coEvo',
                 ExpressionAttributeValues: {
                   ':customerId': session.customer as string,
                   ':subscriptionId': session.subscription as string,
@@ -80,9 +81,20 @@ export async function POST(req: NextRequest) {
                   ':initialFuel': 1000, // $10 initial fuel
                   ':zero': 0,
                   ':coEvo': session.metadata?.coEvolutionOptIn === 'true',
-                  ':status': 'APPROVED',
                 },
               });
+
+              // Also update the main user record status to APPROVED for beta access
+              await docClient.update({
+                TableName,
+                Key: { PK: `USER#${userId}`, SK: `USER#${userId}` },
+                UpdateExpression: 'SET #s = :status',
+                ExpressionAttributeNames: { '#s': 'status' },
+                ExpressionAttributeValues: { ':status': 'APPROVED' },
+              });
+
+              // Send approval notification
+              sendApprovalEmail(userEmail, userName).catch(console.error);
 
               // Trigger Autonomous Provisioning
               const githubToken = process.env.GITHUB_SERVICE_TOKEN;

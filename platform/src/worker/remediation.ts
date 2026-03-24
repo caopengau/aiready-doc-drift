@@ -6,9 +6,14 @@ import http from 'isomorphic-git/http/node';
 import { randomUUID } from 'crypto';
 import { getRemediation, updateRemediation } from '../lib/db/remediation';
 import { getRepository } from '../lib/db/repositories';
+import { getUser } from '../lib/db/users';
+import { sendRemediationNotificationEmail } from '../lib/email';
 
 // Force bundling of agents for dynamic loading
 import '../../../packages/agents';
+
+const APP_URL =
+  process.env.NEXT_PUBLIC_APP_URL || 'https://platform.getaiready.dev';
 
 export async function handler(event: SQSEvent) {
   for (const record of event.Records) {
@@ -24,13 +29,16 @@ export async function handler(event: SQSEvent) {
       accessToken?: string;
     };
 
+    const userId = _userId;
+
     console.log(
       `[RemediationWorker] Processing remediation ${remediationId} for repo ${repoId}`
     );
 
-    const [remediation, repo] = await Promise.all([
+    const [remediation, repo, user] = await Promise.all([
       getRemediation(remediationId),
       getRepository(repoId),
+      getUser(userId),
     ]);
 
     if (!remediation || !repo) {
@@ -107,6 +115,18 @@ export async function handler(event: SQSEvent) {
           prUrl: prUrl,
           prNumber: prNumber,
         });
+
+        if (user?.email) {
+          await sendRemediationNotificationEmail({
+            to: user.email,
+            repoName: repo.name,
+            remediationTitle: remediation.title,
+            status: 'reviewing',
+            prUrl: prUrl,
+            prNumber: prNumber,
+            dashboardUrl: `${APP_URL}/dashboard/repo/${repo.id}`,
+          });
+        }
       } else {
         throw new Error(result.error || 'Workflow execution failed');
       }
@@ -115,10 +135,25 @@ export async function handler(event: SQSEvent) {
         `[RemediationWorker] Error processing remediation ${remediationId}:`,
         error
       );
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Unknown error during remediation';
       await updateRemediation(remediationId, {
         status: 'failed',
-        agentStatus: `Error: ${error instanceof Error ? error.message : 'Unknown error during remediation'}`,
+        agentStatus: `Error: ${errorMessage}`,
       });
+
+      if (user?.email) {
+        await sendRemediationNotificationEmail({
+          to: user.email,
+          repoName: repo.name,
+          remediationTitle: remediation.title,
+          status: 'failed',
+          error: errorMessage,
+          dashboardUrl: `${APP_URL}/dashboard/repo/${repo.id}`,
+        });
+      }
     } finally {
       // Cleanup temp directory
       try {

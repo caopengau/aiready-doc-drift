@@ -1,13 +1,30 @@
 import { auth } from '../../../auth';
 import { ProvisioningOrchestrator } from '../../../lib/onboarding/provision-node';
 import { NextResponse } from 'next/server';
+import { getUserStatus } from '../../../lib/db';
 
 export async function POST(req: Request) {
   const session = (await auth()) as any;
 
-  // 1. Strict Authorization (Only Admin)
-  if (!session || session.user?.email !== 'caopengau@gmail.com') {
+  if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const userEmail = session.user.email;
+
+  // 1. Strict Authorization (Admin or Approved Beta)
+  const adminEmails = process.env.ADMIN_EMAILS
+    ? process.env.ADMIN_EMAILS.split(',').map((e) => e.trim())
+    : ['caopengau@gmail.com'];
+
+  const isAdmin = adminEmails.includes(userEmail);
+  const status = await getUserStatus(userEmail);
+
+  if (!isAdmin && status !== 'APPROVED') {
+    return NextResponse.json(
+      { error: 'Beta Access Restricted' },
+      { status: 403 }
+    );
   }
 
   // 2. Extract GitHub Access Token from session
