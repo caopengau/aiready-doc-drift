@@ -10,7 +10,9 @@
     "clean": "rm -rf .next out",
     "test:e2e": "playwright test",
     "deploy:sst": "sst deploy --yes",
-    "deploy:sst:prod": "sst deploy --stage production --yes"
+    "deploy:sst:prod": "sst deploy --stage production --yes",
+    "type-check": "tsc --noEmit",
+    "format-check": "prettier --check . --ignore-path ../.prettierignore"
   },
   "dependencies": {
     "@aiready/components": "workspace:*",

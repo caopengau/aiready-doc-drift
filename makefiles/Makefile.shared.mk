@@ -169,7 +169,9 @@ else
 	MAKE_PARALLEL := -j$(PARALLELISM)
 endif
 
-# Default pnpm silent flag (can be overridden by caller)
+# PNPM and Turbo configuration
+PNPM ?= $(shell command -v pnpm || echo pnpm)
+TURBO := $(PNPM) turbo
 SILENT_PNPM ?= --silent
 SILENT_TURBO ?= --output-logs=errors-only
 

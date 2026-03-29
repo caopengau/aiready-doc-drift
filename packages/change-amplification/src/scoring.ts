@@ -1,4 +1,8 @@
-import { ToolName, buildStandardToolScore } from '@aiready/core';
+import {
+  ToolName,
+  buildStandardToolScore,
+  type ToolScoringOutput,
+} from '@aiready/core';
 import type { ChangeAmplificationReport } from './types';
 
 /**
@@ -6,7 +10,7 @@ import type { ChangeAmplificationReport } from './types';
  */
 export function calculateChangeAmplificationScore(
   report: ChangeAmplificationReport
-): any {
+): ToolScoringOutput {
   const { summary } = report;
 
   return buildStandardToolScore({

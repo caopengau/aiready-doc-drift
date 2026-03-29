@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "type-check": "tsc --noEmit",
+    "format-check": "prettier --check . --ignore-path ../../.prettierignore"
   },
   "devDependencies": {
     "wrangler": "^3.0.0"

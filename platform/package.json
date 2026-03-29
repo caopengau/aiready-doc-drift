@@ -14,7 +14,8 @@
     "deploy": "sst deploy --stage dev --yes",
     "deploy:prod": "sst deploy --stage prod --yes",
     "remove": "sst remove --stage dev --yes",
-    "remove:local": "sst remove --stage local --yes"
+    "remove:local": "sst remove --stage local --yes",
+    "format-check": "prettier --check . --ignore-path ../.prettierignore"
   },
   "dependencies": {
     "@aiready/agent-grounding": "workspace:*",

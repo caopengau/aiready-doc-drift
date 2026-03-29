@@ -27,7 +27,7 @@ export async function parseRuleFile(
   const lines = content.split('\n');
 
   // Extract frontmatter if present
-  const frontmatter: Record<string, any> = {};
+  const frontmatter: Record<string, string> = {};
   let contentStart = 0;
 
   if (content.startsWith('---')) {
@@ -112,7 +112,7 @@ export async function parseRuleFile(
 
   // Parse tags
   const tags = frontmatter.tags
-    ? frontmatter.tags.split(',').map((t: string) => t.trim())
+    ? (frontmatter.tags as string).split(',').map((t: string) => t.trim())
     : [];
 
   // Infer section from filename patterns
@@ -141,22 +141,20 @@ export async function parseRuleFile(
   }
 
   // Fall back to frontmatter section if specified
-  section = frontmatter.section || section || 0;
+  if (frontmatter.section) {
+    section = parseInt(frontmatter.section, 10) || section;
+  }
 
   const rule: Rule = {
     id: '', // Will be assigned by build script based on sorted order
     title: frontmatter.title || title,
     section: section,
     subsection: undefined,
-    impact: frontmatter.impact || impact,
+    impact: (frontmatter.impact as ImpactLevel) || impact,
     impactDescription: frontmatter.impactDescription || impactDescription,
     explanation: frontmatter.explanation || explanation.trim(),
     examples,
-    references: frontmatter.references
-      ? Array.isArray(frontmatter.references)
-        ? frontmatter.references
-        : [frontmatter.references]
-      : references,
+    references: frontmatter.references ? [frontmatter.references] : references,
     tags: frontmatter.tags ? tags : undefined,
   };
 

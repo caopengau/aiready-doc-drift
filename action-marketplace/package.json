@@ -5,7 +5,9 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "ncc build src/index.ts -o dist",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "type-check": "tsc --noEmit",
+    "format-check": "prettier --check . --ignore-path ../.prettierignore"
   },
   "dependencies": {
     "@actions/core": "^3.0.0",

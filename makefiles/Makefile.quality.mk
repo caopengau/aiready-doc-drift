@@ -19,8 +19,13 @@ TYPE_LEAF := $(foreach spoke,$(QUALITY_SPOKES),type-check-$(spoke))
 
 # Combined quality checks
 check-all: ## Run format-check, lint, and type-check across the repo
-	@$(call log_step,Running format check on all packages...)
-	@$(MAKE) $(MAKE_PARALLEL) $(FORMAT_LEAF) $(LINT_LEAF) $(TYPE_LEAF)
+	@$(call log_step,Running all quality checks with Turbo...)
+	@if command -v $(TURBO) >/dev/null 2>&1 || [ -f ./node_modules/.bin/turbo ]; then \
+		unset npm_config_loglevel; \
+		$(TURBO) run lint format-check type-check $(SILENT_TURBO); \
+	else \
+		$(MAKE) $(MAKE_PARALLEL) $(FORMAT_LEAF) $(LINT_LEAF) $(TYPE_LEAF); \
+	fi
 	@$(call log_success,All checks passed)
 
 check: check-all ## Alias for check-all
@@ -35,9 +40,9 @@ fix: ## Run ESLint --fix and Prettier format
 # Lint targets
 lint: ## Run ESLint on all packages
 	@$(call log_info,Running ESLint on all packages...)
-	@if command -v turbo >/dev/null 2>&1; then \
+	@if command -v $(TURBO) >/dev/null 2>&1 || [ -f ./node_modules/.bin/turbo ]; then \
 		unset npm_config_loglevel; \
-		turbo run lint $(SILENT_TURBO); \
+		$(TURBO) run lint $(SILENT_TURBO); \
 	else \
 		$(MAKE) $(MAKE_PARALLEL) $(LINT_LEAF); \
 	fi
@@ -61,8 +66,13 @@ lint-fix-%:
 
 # Format checks
 format-check: ## Check formatting across all packages
-	@$(call log_step,Checking formatting with Prettier...)
-	@$(MAKE) $(MAKE_PARALLEL) $(FORMAT_LEAF)
+	@$(call log_step,Checking formatting with Prettier (Turbo)...)
+	@if command -v $(TURBO) >/dev/null 2>&1 || [ -f ./node_modules/.bin/turbo ]; then \
+		unset npm_config_loglevel; \
+		$(TURBO) run format-check $(SILENT_TURBO); \
+	else \
+		$(MAKE) $(MAKE_PARALLEL) $(FORMAT_LEAF); \
+	fi
 	@$(call log_success,Formatting checks passed)
 
 format-check-%:
@@ -82,8 +92,13 @@ format-%:
 
 # Type checking
 type-check: ## Run TypeScript type-check on all packages
-	@$(call log_step,Type-checking all packages...)
-	@$(MAKE) $(MAKE_PARALLEL) $(TYPE_LEAF)
+	@$(call log_step,Type-checking all packages (Turbo)...)
+	@if command -v $(TURBO) >/dev/null 2>&1 || [ -f ./node_modules/.bin/turbo ]; then \
+		unset npm_config_loglevel; \
+		$(TURBO) run type-check $(SILENT_TURBO); \
+	else \
+		$(MAKE) $(MAKE_PARALLEL) $(TYPE_LEAF); \
+	fi
 	@$(call log_success,All type checks passed)
 
 type-check-%:

@@ -9,7 +9,9 @@
     "test": "vitest run",
     "start": "next start",
     "lint": "eslint",
-    "warm-pool": "npx tsx scripts/warm-account-pool.ts"
+    "warm-pool": "npx tsx scripts/warm-account-pool.ts",
+    "type-check": "tsc --noEmit",
+    "format-check": "prettier --check . --ignore-path ../.prettierignore"
   },
   "dependencies": {
     "@aiready/core": "workspace:*",

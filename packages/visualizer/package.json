@@ -39,7 +39,9 @@
     "build:cli": "tsup",
     "build:web": "cd web && vite build",
     "typecheck": "tsc --noEmit && cd web && tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "type-check": "tsc --noEmit",
+    "format-check": "prettier --check . --ignore-path ../../.prettierignore"
   },
   "keywords": [
     "aiready",

@@ -10,6 +10,8 @@ import {
   ToolName,
   normalizeAnalysisResult,
   type Issue,
+  type UnifiedReport,
+  type AnalysisResult,
 } from '@aiready/core';
 import type { GraphData, FileNode, DependencyEdge } from '../types';
 import {
@@ -132,7 +134,10 @@ export class GraphBuilder {
   /**
    * Static helper to build graph from an AIReady report JSON.
    */
-  static buildFromReport(report: any, rootDir = process.cwd()): GraphData {
+  static buildFromReport(
+    report: UnifiedReport | Record<string, any>,
+    rootDir = process.cwd()
+  ): GraphData {
     const validation = UnifiedReportSchema.safeParse(report);
     if (!validation.success) {
       console.warn(
@@ -163,12 +168,15 @@ export class GraphBuilder {
       }
     };
 
-    const getResults = (toolKey: string, legacyKey?: string): any[] => {
+    const getResults = (
+      toolKey: string,
+      legacyKey?: string
+    ): AnalysisResult[] => {
       const camelKey = toolKey.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
       const toolData =
-        report[toolKey] ??
-        report[camelKey] ??
-        (legacyKey ? report[legacyKey] : undefined);
+        (report as any)[toolKey] ??
+        (report as any)[camelKey] ??
+        (legacyKey ? (report as any)[legacyKey] : undefined);
       if (!toolData) return [];
       if (Array.isArray(toolData)) return toolData;
       return toolData.results ?? toolData.issues ?? [];

@@ -47,7 +47,15 @@ export interface DependencyEdge extends GraphEdge {
   target: string;
 
   // Edge properties
-  type?: 'import' | 'require' | 'dynamic' | any;
+  type?:
+    | 'import'
+    | 'require'
+    | 'dynamic'
+    | 'dependency'
+    | 'reference'
+    | 'similarity'
+    | 'related'
+    | string;
   weight?: number;
 
   // Visual properties (from GraphLink)

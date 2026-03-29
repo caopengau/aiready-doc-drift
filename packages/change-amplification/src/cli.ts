@@ -4,12 +4,23 @@ import chalk from 'chalk';
 import * as path from 'path';
 import * as fs from 'fs';
 import { analyzeChangeAmplification } from './analyzer';
-import type { ChangeAmplificationOptions } from './types';
+import type {
+  ChangeAmplificationOptions,
+  ChangeAmplificationReport,
+  FileChangeAmplificationResult,
+  ChangeAmplificationIssue,
+} from './types';
 import { displayStandardConsoleReport } from '@aiready/core';
 
 export const changeAmplificationAction = async (
   directory: string,
-  options: any
+  options: {
+    include?: string;
+    exclude?: string;
+    output?: string;
+    outputFile?: string;
+    [key: string]: any;
+  }
 ) => {
   try {
     const resolvedDir = path.resolve(process.cwd(), directory);
@@ -19,7 +30,8 @@ export const changeAmplificationAction = async (
       exclude: options.exclude ? options.exclude.split(',') : undefined,
     };
 
-    const report = await analyzeChangeAmplification(finalOptions);
+    const report: ChangeAmplificationReport =
+      await analyzeChangeAmplification(finalOptions);
 
     if (options.output === 'json') {
       const outputPath =
@@ -40,8 +52,8 @@ export const changeAmplificationAction = async (
         { name: 'Major Issues', value: (report.summary.majorIssues ?? 0) * 5 },
       ],
 
-      issues: report.results.flatMap((r: any) =>
-        r.issues.map((i: any) => ({
+      issues: report.results.flatMap((r: FileChangeAmplificationResult) =>
+        r.issues.map((i: ChangeAmplificationIssue) => ({
           ...i,
           message: `[${r.fileName}] ${i.message}`,
         }))

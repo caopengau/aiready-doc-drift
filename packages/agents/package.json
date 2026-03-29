@@ -18,7 +18,8 @@
     "dev": "tsup index.ts --format cjs,esm --dts --watch",
     "test": "vitest run",
     "type-check": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "format-check": "prettier --check . --ignore-path ../../.prettierignore"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.0.0",

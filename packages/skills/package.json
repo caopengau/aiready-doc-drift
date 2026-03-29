@@ -28,7 +28,9 @@
     "validate": "tsx src/validate.ts",
     "test": "vitest run",
     "dev": "pnpm run build && pnpm run validate",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit",
+    "format-check": "prettier --check . --ignore-path ../../.prettierignore"
   },
   "dependencies": {
     "@aiready/core": "workspace:*"

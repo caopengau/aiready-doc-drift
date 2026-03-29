@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "type-check": "tsc --noEmit",
+    "format-check": "prettier --check . --ignore-path ../.prettierignore"
   },
   "devDependencies": {
     "@aiready/cli": "workspace:*",

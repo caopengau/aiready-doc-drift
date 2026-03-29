@@ -125,7 +125,7 @@ export async function analyzeChangeAmplification(
   const results: FileChangeAmplificationResult[] = [];
 
   // Helper for severity mapping
-  const getLevel = (s: any): number => {
+  const getLevel = (s: Severity | string): number => {
     if (s === Severity.Critical || s === 'critical') return 4;
     if (s === Severity.Major || s === 'major') return 3;
     if (s === Severity.Minor || s === 'minor') return 2;

@@ -322,7 +322,9 @@
     "watch": "tsup src/extension.ts --format cjs --out-dir dist --external vscode --watch",
     "lint": "eslint src",
     "test": "vitest run --passWithNoTests",
-    "package": "vsce package --no-dependencies"
+    "package": "vsce package --no-dependencies",
+    "type-check": "tsc --noEmit",
+    "format-check": "prettier --check . --ignore-path ../.prettierignore"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

@@ -12,6 +12,19 @@
     "lint": {
       "outputs": []
     },
+    "type-check": {
+      "inputs": ["src/**/*.ts", "src/**/*.tsx", "tsconfig.json"],
+      "outputs": []
+    },
+    "format-check": {
+      "inputs": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "src/**/*.css",
+        "src/**/*.json"
+      ],
+      "outputs": []
+    },
     "dev": {
       "cache": false,
       "persistent": true

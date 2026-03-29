@@ -9,8 +9,7 @@ include makefiles/Makefile.stats.mk
 include makefiles/Makefile.deploy.mk
 include makefiles/Makefile.distribution.mk
 
-# Dynamically resolve pnpm path for use in all commands
-PNPM := $(shell command -v pnpm)
+# (PNPM and TURBO are defined in Makefile.shared.mk)
 
 .DEFAULT_GOAL := help
 
@@ -61,14 +60,17 @@ pre-commit: ## Run pre-commit checks (lint-staged, build, check)
 		echo ""; \
 		exit 1; \
 	fi
-	@if ! $(MAKE) $(MAKE_PARALLEL) QUIET=1 build check; then \
-		$(call separator,$(RED)); \
-		$(call log_error,build or check failed); \
-		$(call separator,$(RED)); \
-		echo ""; \
-		echo "➡️  Fix the inner most errors above, then gradually work outward"; \
-		echo ""; \
-		exit 1; \
+	@$(call log_step,Running build and quality checks (Turbo)...)
+	@if command -v $(TURBO) >/dev/null 2>&1 || [ -f ./node_modules/.bin/turbo ]; then \
+		unset npm_config_loglevel; \
+		$(TURBO) run build lint type-check format-check $(SILENT_TURBO) || { \
+			$(call separator,$(RED)); \
+			$(call log_error,Turbo checks failed); \
+			$(call separator,$(RED)); \
+			exit 1; \
+		}; \
+	else \
+		$(MAKE) $(MAKE_PARALLEL) QUIET=1 build check || exit 1; \
 	fi
 	@$(call log_success,Pre-commit checks passed)
 
