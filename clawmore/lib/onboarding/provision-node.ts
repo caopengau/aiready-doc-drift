@@ -67,6 +67,10 @@ export class ProvisioningOrchestrator {
       if (accountId) {
         console.log(`[Provision] Found warm account ${accountId} in pool.`);
         await assignAccountToOwner(accountId, userEmail, repoName);
+        // Replenish pool asynchronously — create a new warm account
+        this.replenishWarmPool().catch((err) =>
+          console.error('[Provision] Failed to replenish warm pool:', err)
+        );
       } else {
         console.log(`[Provision] Pool empty. Creating new account...`);
         const requestId = await createManagedAccount(
@@ -274,6 +278,29 @@ export class ProvisioningOrchestrator {
     throw new Error(
       `Fork ${owner}/${repo} did not become available after ${maxRetries} retries`
     );
+  }
+
+  /**
+   * Asynchronously creates a new warm pool account to replace the one just taken.
+   * This ensures the pool is always ready for the next client.
+   */
+  private async replenishWarmPool(): Promise<void> {
+    const adminEmail = process.env.ADMIN_EMAIL || 'caodanju@gmail.com';
+    console.log('[Provision] Replenishing warm pool...');
+    try {
+      const requestId = await createManagedAccount(
+        adminEmail,
+        'WarmPool',
+        undefined,
+        true
+      );
+      const newAccountId = await waitForAccountCreation(requestId);
+      console.log(
+        `[Provision] Warm pool replenished: ${newAccountId} is now available.`
+      );
+    } catch (err) {
+      console.error('[Provision] Warm pool replenishment failed:', err);
+    }
   }
 
   private async encryptSecret(
