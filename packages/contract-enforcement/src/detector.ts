@@ -183,6 +183,15 @@ export function detectDefensivePatterns(
   const counts: PatternCounts = { ...ZERO_COUNTS };
   const totalLines = code.split('\n').length;
 
+  // Skip env-fallback checks for config files - they intentionally use fallbacks
+  const isConfigFile =
+    filePath.endsWith('.config.ts') ||
+    filePath.endsWith('.config.js') ||
+    filePath.endsWith('.config.mts') ||
+    filePath.endsWith('.config.mjs') ||
+    filePath.includes('sst.config.ts') ||
+    filePath.endsWith('playwright.config.ts');
+
   let ast: TSESTree.Program;
   try {
     ast = parse(code, {
@@ -330,8 +339,9 @@ export function detectDefensivePatterns(
       }
     }
 
-    // Pattern: process.env.X || default
+    // Pattern: process.env.X || default (skip for config files)
     if (
+      !isConfigFile &&
       node.type === 'LogicalExpression' &&
       node.operator === '||' &&
       isProcessEnvAccess(node.left)
