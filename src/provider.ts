@@ -11,7 +11,7 @@ import { DocDriftOptions } from './types';
 /**
  * Documentation Drift Tool Provider
  */
-export const DocDriftProvider = createProvider({
+export const DOC_DRIFT_PROVIDER = createProvider({
   id: ToolName.DocDrift,
   alias: ['doc-drift', 'docs', 'jsdoc'],
   version: '0.9.5',
