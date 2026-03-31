@@ -87,7 +87,11 @@ export class ProvisioningOrchestrator {
       // 2. AWS Governance & Bootstrapping
       const scpId = await createServerlessSCP();
       await attachSCPToAccount(scpId, accountId);
-      const bootstrapRoleArn = await bootstrapManagedAccount(accountId);
+      const bootstrapRoleArn = await bootstrapManagedAccount(
+        accountId,
+        githubOrg,
+        repoName
+      );
 
       // 3. GitHub Provisioning — Fork from serverlessclaw into 'clawmost' org
       console.log(
@@ -113,10 +117,12 @@ export class ProvisioningOrchestrator {
         private: true,
       });
 
-      // 4. Secret Injection (Injecting bootstrapping credentials)
-      console.log(`[Provision] Injecting AWS and Evolution secrets...`);
-      const credentials = await assumeSubAccountRole(accountId);
-
+      await this.injectSecret(
+        githubOrg,
+        repoName,
+        'AWS_ROLE_ARN',
+        bootstrapRoleArn
+      );
       // Find the user ID for this email to inject it
       const userRes = await docClient.query({
         TableName: process.env.DYNAMO_TABLE || '',
@@ -130,24 +136,6 @@ export class ProvisioningOrchestrator {
       const resolvedUserId =
         userRes.Items?.[0]?.PK.replace('USER#', '') || _userId || 'unknown';
 
-      await this.injectSecret(
-        githubOrg,
-        repoName,
-        'AWS_ACCESS_KEY_ID',
-        credentials.accessKeyId
-      );
-      await this.injectSecret(
-        githubOrg,
-        repoName,
-        'AWS_SECRET_ACCESS_KEY',
-        credentials.secretAccessKey
-      );
-      await this.injectSecret(
-        githubOrg,
-        repoName,
-        'AWS_ROLE_ARN',
-        bootstrapRoleArn
-      );
       await this.injectSecret(
         githubOrg,
         repoName,

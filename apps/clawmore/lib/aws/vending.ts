@@ -15,6 +15,9 @@ import {
   IAMClient,
   CreateRoleCommand,
   AttachRolePolicyCommand,
+  CreateOpenIDConnectProviderCommand,
+  GetOpenIDConnectProviderCommand,
+  PutRolePolicyCommand,
 } from '@aws-sdk/client-iam';
 import {
   CodeBuildClient,
@@ -242,15 +245,21 @@ export async function assumeSubAccountRole(accountId: string) {
 }
 
 /**
- * Bootstraps a newly created managed account with a restricted management role.
+ * Bootstraps a newly created managed account with OIDC trust for GitHub Actions.
  *
- * This creates a role in the sub-account that the main account can assume to perform
- * initial platform setup and attaches an administrative policy for bootstrap purposes.
+ * This removes the need for long-lived Access Keys by allowing GitHub Actions
+ * to assume a role via OpenID Connect.
  *
  * @param accountId - The AWS Account Id of the managed account to bootstrap.
- * @returns The ARN of the created bootstrap role in the sub-account.
+ * @param githubOrg - The GitHub organization (e.g. 'clawmost').
+ * @param repoName - The repository name allowed to assume the role.
+ * @returns The ARN of the created OIDC role in the sub-account.
  */
-export async function bootstrapManagedAccount(accountId: string) {
+export async function bootstrapManagedAccount(
+  accountId: string,
+  githubOrg: string = 'clawmost',
+  repoName?: string
+) {
   const credentials = await assumeSubAccountRole(accountId);
   const iamClient = new IAMClient({
     region: 'us-east-1',
@@ -261,34 +270,100 @@ export async function bootstrapManagedAccount(accountId: string) {
   const identity = await stsClientMain.send(new GetCallerIdentityCommand({}));
   const mainAccountId = identity.Account!;
 
-  const roleName = 'ClawMore-Bootstrap-Role';
+  // 1. Create OIDC Provider for GitHub if it doesn't exist
+  const providerArn = `arn:aws:iam::${accountId}:oidc-provider/token.actions.githubusercontent.com`;
+  try {
+    await iamClient.send(
+      new GetOpenIDConnectProviderCommand({
+        OpenIDConnectProviderArn: providerArn,
+      })
+    );
+  } catch (error: any) {
+    if (
+      error.name === 'NoSuchEntity' ||
+      error.name === 'NoSuchEntityException'
+    ) {
+      try {
+        await iamClient.send(
+          new CreateOpenIDConnectProviderCommand({
+            Url: 'https://token.actions.githubusercontent.com',
+            ClientIDList: ['sts.amazonaws.com'],
+            ThumbprintList: [
+              '6938fd4d98bab03faadb97b34396831e3780aea1',
+              '1c58a3a8518e8759bf075b76b750d4f2df264fcd',
+            ],
+          })
+        );
+      } catch (createErr: any) {
+        if (createErr.name !== 'EntityAlreadyExists') throw createErr;
+      }
+    } else {
+      throw error;
+    }
+  }
 
-  // 1. Create Role
+  const roleName = 'ClawMore-GitHub-Actions-Role';
+
+  // 2. Create Role with OIDC Trust Policy
+  const sub = repoName
+    ? `repo:${githubOrg}/${repoName}:*`
+    : `repo:${githubOrg}/*:*`;
+
+  const trustPolicy = {
+    Version: '2012-10-17',
+    Statement: [
+      {
+        Effect: 'Allow',
+        Principal: {
+          Federated: providerArn,
+        },
+        Action: 'sts:AssumeRoleWithWebIdentity',
+        Condition: {
+          StringLike: {
+            'token.actions.githubusercontent.com:sub': sub,
+          },
+          StringEquals: {
+            'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
+          },
+        },
+      },
+      {
+        Effect: 'Allow',
+        Principal: {
+          AWS: `arn:aws:iam::${mainAccountId}:root`,
+        },
+        Action: 'sts:AssumeRole',
+      },
+    ],
+  };
+
   try {
     await iamClient.send(
       new CreateRoleCommand({
         RoleName: roleName,
-        AssumeRolePolicyDocument: JSON.stringify({
-          Version: '2012-10-17',
-          Statement: [
-            {
-              Effect: 'Allow',
-              Principal: {
-                AWS: `arn:aws:iam::${mainAccountId}:root`,
-              },
-              Action: 'sts:AssumeRole',
-            },
-          ],
-        }),
-        Description:
-          'Management role for ClawMore Platform to deploy resources.',
+        AssumeRolePolicyDocument: JSON.stringify(trustPolicy),
+        Description: 'OIDC role for GitHub Actions to deploy and evolve code.',
       })
     );
   } catch (error: any) {
-    if (error.name !== 'EntityAlreadyExists') throw error;
+    if (error.name === 'EntityAlreadyExists') {
+      // Update trust policy if it already exists
+      // (Note: UpdateRoleCommand only updates description/timeout,
+      // use UpdateAssumeRolePolicyCommand for policy)
+      const { UpdateAssumeRolePolicyCommand } =
+        await import('@aws-sdk/client-iam');
+      await iamClient.send(
+        new UpdateAssumeRolePolicyCommand({
+          RoleName: roleName,
+          PolicyDocument: JSON.stringify(trustPolicy),
+        })
+      );
+    } else {
+      throw error;
+    }
   }
 
-  // 2. Attach AdministratorAccess for now (can be restricted later)
+  // 3. Attach AdministratorAccess (for bootstrap/deploy)
   await iamClient.send(
     new AttachRolePolicyCommand({
       RoleName: roleName,

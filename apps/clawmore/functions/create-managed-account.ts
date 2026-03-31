@@ -29,7 +29,10 @@ export const handler = async (event: any) => {
     console.log(
       `SCP attached successfully. Bootstrapping account ${accountId}...`
     );
-    const bootstrapRoleArn = await bootstrapManagedAccount(accountId);
+    const bootstrapRoleArn = await bootstrapManagedAccount(
+      accountId,
+      'clawmost'
+    );
     console.log(`Account bootstrapped with role: ${bootstrapRoleArn}`);
 
     return {

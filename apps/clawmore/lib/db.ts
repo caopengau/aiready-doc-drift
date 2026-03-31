@@ -35,6 +35,7 @@ export interface UserMetadata {
   aiTopupAmountCents: number;
   coEvolutionOptIn: boolean;
   autoTopupEnabled: boolean;
+  enabledSkills: string[]; // List of enabled agent skills (e.g., 'refactor', 'security')
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   stripeMutationSubscriptionItemId?: string;
@@ -49,6 +50,9 @@ export interface MutationRecord {
   repoName: string;
   mutationType: string;
   mutationStatus: 'SUCCESS' | 'FAILURE';
+  complexitySaved?: number; // Complexity points reduced by this mutation
+  estimatedHoursSaved?: number; // Estimated developer hours saved by this mutation
+  tokensUsed?: number; // Total LLM tokens used for this mutation
   createdAt: string;
 }
 
@@ -110,7 +114,7 @@ export async function ensureUserMetadata(email: string) {
         TableName: process.env.DYNAMO_TABLE,
         Key: { PK, SK },
         UpdateExpression:
-          'SET EntityType = :type, aiTokenBalanceCents = :balance, aiRefillThresholdCents = :threshold, aiTopupAmountCents = :topupAmount, coEvolutionOptIn = :coevo, autoTopupEnabled = :topup',
+          'SET EntityType = :type, aiTokenBalanceCents = :balance, aiRefillThresholdCents = :threshold, aiTopupAmountCents = :topupAmount, coEvolutionOptIn = :coevo, autoTopupEnabled = :topup, enabledSkills = :skills',
         ExpressionAttributeValues: {
           ':type': 'UserMetadata',
           ':balance': 500, // $5.00 welcome credit
@@ -118,6 +122,7 @@ export async function ensureUserMetadata(email: string) {
           ':topupAmount': 1000, // $10.00 default top-up
           ':coevo': false,
           ':topup': true,
+          ':skills': ['refactor', 'validation'], // Default skills
         },
       })
     );
@@ -160,25 +165,53 @@ export async function createMutationRecord(data: {
   repoName?: string;
   type: string;
   status: 'SUCCESS' | 'FAILURE';
+  complexitySaved?: number;
+  estimatedHoursSaved?: number;
+  tokensUsed?: number;
 }) {
-  const { userId, mutationId, repoName, type, status } = data;
+  const {
+    userId,
+    mutationId,
+    repoName,
+    type,
+    status,
+    complexitySaved,
+    estimatedHoursSaved,
+    tokensUsed,
+  } = data;
   const PK = `USER#${userId}`;
   const SK = `MUTATION#${mutationId}`;
+
+  const updateExpr = [
+    'SET EntityType = :type, mutationId = :id, repoName = :repo, mutationType = :mtype, mutationStatus = :status, createdAt = :now',
+    complexitySaved !== undefined ? ', complexitySaved = :complexity' : '',
+    estimatedHoursSaved !== undefined ? ', estimatedHoursSaved = :hours' : '',
+    tokensUsed !== undefined ? ', tokensUsed = :tokens' : '',
+  ]
+    .filter(Boolean)
+    .join('');
+
+  const expressionValues: Record<string, any> = {
+    ':type': 'MutationEvent',
+    ':id': mutationId,
+    ':repo': repoName || 'unknown',
+    ':mtype': type,
+    ':status': status,
+    ':now': new Date().toISOString(),
+  };
+
+  if (complexitySaved !== undefined)
+    expressionValues[':complexity'] = complexitySaved;
+  if (estimatedHoursSaved !== undefined)
+    expressionValues[':hours'] = estimatedHoursSaved;
+  if (tokensUsed !== undefined) expressionValues[':tokens'] = tokensUsed;
 
   await docClient.send(
     new UpdateCommand({
       TableName: process.env.DYNAMO_TABLE,
       Key: { PK, SK },
-      UpdateExpression:
-        'SET EntityType = :type, mutationId = :id, repoName = :repo, mutationType = :mtype, mutationStatus = :status, createdAt = :now',
-      ExpressionAttributeValues: {
-        ':type': 'MutationEvent',
-        ':id': mutationId,
-        ':repo': repoName || 'unknown',
-        ':mtype': type,
-        ':status': status,
-        ':now': new Date().toISOString(),
-      },
+      UpdateExpression: updateExpr,
+      ExpressionAttributeValues: expressionValues,
     })
   );
 }
@@ -489,6 +522,26 @@ export async function updateInnovationStatus(
       ExpressionAttributeNames: { '#status': 'status' },
       ExpressionAttributeValues: {
         ':status': status,
+        ':now': new Date().toISOString(),
+      },
+    })
+  );
+}
+
+/**
+ * Updates the enabled skills for a user.
+ */
+export async function updateUserSkills(email: string, skills: string[]) {
+  const PK = `USER#${email}`;
+  const SK = 'METADATA';
+
+  await docClient.send(
+    new UpdateCommand({
+      TableName: process.env.DYNAMO_TABLE,
+      Key: { PK, SK },
+      UpdateExpression: 'SET enabledSkills = :skills, updatedAt = :now',
+      ExpressionAttributeValues: {
+        ':skills': skills,
         ':now': new Date().toISOString(),
       },
     })

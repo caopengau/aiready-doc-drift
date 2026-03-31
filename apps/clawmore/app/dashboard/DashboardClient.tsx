@@ -9,6 +9,7 @@ import OverviewTab from './components/OverviewTab';
 import NodesTab from './components/NodesTab';
 import SettingsTab from './components/SettingsTab';
 import AccountTab from './components/AccountTab';
+import IntegrationsTab from './components/IntegrationsTab';
 
 interface DashboardClientProps {
   user: any;
@@ -38,6 +39,9 @@ export default function DashboardClient({
     status.aiRefillThresholdCents
   );
   const [topupAmountCents, setTopupAmountCents] = React.useState(1000);
+  const [enabledSkills, setEnabledSkills] = React.useState<string[]>(
+    status.enabledSkills || ['refactor', 'validation']
+  );
   const [isCheckingOut, setIsCheckingOut] = React.useState(false);
 
   // Persistence logic
@@ -61,6 +65,14 @@ export default function DashboardClient({
   const handleAutoTopupToggle = (enabled: boolean) => {
     setIsAutoTopupEnabled(enabled);
     saveSettings({ autoTopupEnabled: enabled });
+  };
+
+  const handleSkillToggle = (skill: string) => {
+    const newSkills = enabledSkills.includes(skill)
+      ? enabledSkills.filter((s) => s !== skill)
+      : [...enabledSkills, skill];
+    setEnabledSkills(newSkills);
+    saveSettings({ enabledSkills: newSkills });
   };
 
   React.useEffect(() => {
@@ -202,10 +214,13 @@ export default function DashboardClient({
 
         {activeTab === 'overview' && <OverviewTab status={status} />}
         {activeTab === 'nodes' && <NodesTab detectedRegion={detectedRegion} />}
+        {activeTab === 'integrations' && <IntegrationsTab />}
         {activeTab === 'settings' && (
           <SettingsTab
             isCoevolutionEnabled={isCoevolutionEnabled}
             onCoevolutionToggle={handleCoevolutionToggle}
+            enabledSkills={enabledSkills}
+            onSkillToggle={handleSkillToggle}
           />
         )}
         {activeTab === 'account' && (

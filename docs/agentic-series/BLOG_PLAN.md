@@ -6,10 +6,10 @@ This series explores the evolution of software engineering from human-centric "r
 
 ## Progress Overview
 
-- **Series Status**: In Progress
-- **Total Posts**: 12
-- **Completed**: 12 (Drafted/Published)
-- **Next Up**: Final Series Review
+- **Series Status**: Extended
+- **Total Posts**: 13
+- **Completed**: 13 (Drafted/Published)
+- **Next Up**: Final Series Review & ROI Case Studies
 
 ---
 
@@ -73,6 +73,11 @@ This series explores the evolution of software engineering from human-centric "r
   - **Status**: Drafted
   - **Focus**: What it means to work on a codebase that is actively working back on you.
   - **Draft**: [12-living-repository.md](./12-living-repository.md)
+
+- [x] **Post 13: Evolution ROI: Measuring the Infinite Value of Agentic Swarms**
+  - **Status**: Drafted
+  - **Focus**: Quantifying the value of a Living Repository. Complexity reduction and time-saving metrics.
+  - **Draft**: [13-evolution-roi.md](./13-evolution-roi.md)
 
 ---
 

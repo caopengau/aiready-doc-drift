@@ -7,6 +7,7 @@ import LeadForm from '@/components/LeadForm';
 import Navbar from '@/components/Navbar';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import JsonLd from '@/components/JsonLd';
+import SeriesNavigation from './SeriesNavigation';
 
 interface BlogLayoutProps {
   children: ReactNode;
@@ -106,6 +107,7 @@ export default function BlogLayout({
             <Breadcrumbs items={breadcrumbItems} />
             <article className="prose prose-invert prose-zinc max-w-none normal-case">
               {children}
+              <SeriesNavigation currentSlug={metadata.slug} />
             </article>
           </div>
         </div>

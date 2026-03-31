@@ -27,6 +27,7 @@ export default function DashboardLayout({
     { name: 'Overview', tab: 'overview', icon: LayoutDashboard },
     { name: 'Nodes', tab: 'nodes', icon: Activity },
     { name: 'Account', tab: 'account', icon: User },
+    { name: 'Integrations', tab: 'integrations', icon: Zap },
     { name: 'Settings', tab: 'settings', icon: Settings },
   ];
 
