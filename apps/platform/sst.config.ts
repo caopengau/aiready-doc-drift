@@ -135,7 +135,7 @@ export default $config({
     // SNS Topic for System Alerts
     const alertsTopic = new sst.aws.SnsTopic('SystemAlerts', {
       subscriptions: {
-        email: process.env.SES_TO_EMAIL || 'caopengau@gmail.com',
+        email: process.env.SES_TO_EMAIL || 'team@getaiready.dev',
       },
     });
 
