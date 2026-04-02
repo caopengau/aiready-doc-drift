@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Zap, ChevronRight, Cpu, Activity, GraduationCap } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ChevronRight, Activity, GraduationCap } from 'lucide-react';
 import BlogLayout from '../_components/BlogLayout';
 import Visualizer from '../../../components/blog/Visualizer';
 

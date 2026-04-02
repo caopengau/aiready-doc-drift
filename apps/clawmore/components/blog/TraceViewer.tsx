@@ -2,15 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Terminal,
-  Cpu,
-  Zap,
-  Activity,
-  CheckCircle2,
-  ChevronRight,
-  Hash,
-} from 'lucide-react';
+import { Terminal, Zap, Activity, Hash } from 'lucide-react';
 
 interface TraceLog {
   id: string;
