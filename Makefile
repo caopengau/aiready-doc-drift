@@ -8,6 +8,7 @@ include tooling/makefiles/Makefile.release.mk  # This includes Makefile.publish.
 include tooling/makefiles/Makefile.stats.mk
 include tooling/makefiles/Makefile.deploy.mk
 include tooling/makefiles/Makefile.distribution.mk
+include tooling/makefiles/Makefile.mcp.mk
 
 # (PNPM and TURBO are defined in Makefile.shared.mk)
 

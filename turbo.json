@@ -1,20 +1,50 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [
+    "pnpm-lock.yaml",
+    "tsconfig.base.json",
+    "tsconfig.json",
+    ".prettierrc",
+    ".prettierignore",
+    "eslint.config.js"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+      "outputs": [
+        "dist/**",
+        ".next/**",
+        "!.next/cache/**",
+        "tsconfig.tsbuildinfo"
+      ],
+      "env": [
+        "NODE_ENV",
+        "NEXT_PUBLIC_*",
+        "AWS_*",
+        "SST_*",
+        "DATABASE_URL",
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ]
     },
     "test": {
-      "dependsOn": ["^test", "build"],
-      "outputs": ["coverage/**"]
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"],
+      "env": ["NODE_ENV", "DATABASE_URL"]
     },
     "lint": {
+      "dependsOn": ["^build"],
       "outputs": []
     },
     "type-check": {
+      "dependsOn": ["^build"],
       "inputs": ["src/**/*.ts", "src/**/*.tsx", "tsconfig.json"],
-      "outputs": []
+      "outputs": ["tsconfig.tsbuildinfo"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**/*.ts", "src/**/*.tsx", "tsconfig.json"],
+      "outputs": ["tsconfig.tsbuildinfo"]
     },
     "format-check": {
       "inputs": [

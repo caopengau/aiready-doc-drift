@@ -154,11 +154,24 @@ make push                    # Push monorepo + sync all spokes to GitHub repos
 - Registries: Smithery, Glama, Pulsar
 - Direct: `npx -y @aiready/mcp-server`
 
+## 🚨 MCP Server Maintenance Protocol
+
+When modifying any MCP server (@aiready/mcp-server or @aiready/ast-mcp-server), you **MUST** follow these rules:
+
+1.  **Mandatory Integration Tests**: Every new tool or resource added to an MCP server must have a corresponding integration test in its respective `__tests__` directory.
+2.  **Schema Sync**: Ensure that `schemas.ts` (in AST server) or Zod schemas (in core/mcp-server) are perfectly aligned with the implementation.
+3.  **Documentation First**: Any change to tool arguments, resource URIs, or prompt names **MUST** be updated in the package's `README.md` immediately.
+4.  **Verification**: Always run `make mcp-test` before pushing changes. This ensures both servers and their core dependencies are functional.
+
 ## Agent Workflow
 
-1. **Load Context:** Use doc-mapping.json to load relevant sub-instructions based on task (e.g., development-workflow.md for coding, adding-new-tool.md for new spokes, devops-best-practices.md for DevOps). Run `make help` to understand available curated commands.
-2. **Work:** Follow architecture rules, check existing implementations for patterns, use Makefiles for all DevOps practices (build, test, push, release)
-3. **Update Docs:** After each change, update relevant docs in .github/sub-instructions/ and doc-mapping.json if needed
+1. **Load Context**: Use doc-mapping.json to load relevant sub-instructions based on task. Run `make help` to understand available curated commands.
+2. **Work**: Follow architecture rules, check existing implementations for patterns, use Makefiles for all DevOps practices (build, test, push, release).
+3. **Verify & Document**: After each change:
+    - Update relevant docs in `.github/sub-instructions/` and `doc-mapping.json` if needed.
+    - **MCP Special**: Follow the **MCP Server Maintenance Protocol** above for any MCP-related work.
+    - Update the project's README or specific package READMEs to reflect new capabilities.
+4. **Push**: Use `make push` for monorepo commits to sync all spoke repos automatically.
 
 ## Questions for Agent
 
