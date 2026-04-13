@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { analyzeDocDrift } from './analyzer';
-import { executeSpokeCli } from '@aiready/core';
+import { dispatchSpokeCli } from '@aiready/core';
 import pc from 'picocolors';
 
 export function createCommand() {
@@ -16,7 +16,7 @@ export function createCommand() {
       '6'
     )
     .action(async (options) => {
-      await executeSpokeCli(
+      await dispatchSpokeCli(
         'Doc Drift',
         'documentation drift',
         {
